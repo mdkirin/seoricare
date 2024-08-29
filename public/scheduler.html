@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>검사 예약 관리 시스템</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
+
+    <script src="./scheduler.js" type="module" defer></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <!-- Main Container -->
+    <div class="container mx-auto mt-10">
+
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold">검사 예약 관리 시스템</h1>
+        </div>
+
+        <!-- Calendar and Appointment Section -->
+        <div class="grid grid-cols-3 gap-4">
+            <!-- Calendar Section -->
+            <div class="col-span-2">
+                <div class="bg-white shadow-md rounded p-4">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+
+            <!-- Appointment Registration Section -->
+            <div class="col-span-1 bg-white shadow-md rounded p-4">
+                <h2 class="text-xl font-semibold mb-4">검사 등록</h2>
+                
+                <form id="appointmentForm">
+                    <div class="mb-4">
+                        <label for="time" class="block text-gray-700">예약 시각</label>
+                        <input type="time" id="time" class="mt-1 p-2 border border-gray-300 rounded w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label for="patientName" class="block text-gray-700">환자 이름</label>
+                        <input type="text" id="patientName" class="mt-1 p-2 border border-gray-300 rounded w-full">
+                    </div>
+                    <div class="mb-4">
+                        <label for="chartNumber" class="block text-gray-700">차트 번호</label>
+                        <input type="text" id="chartNumber" class="mt-1 p-2 border border-gray-300 rounded w-full">
+                    </div>
+
+                    <!-- Sections for Health Checkups, Endoscopy, and Ultrasound -->
+                    <div class="mb-4">
+                        <label for="examType" class="block text-gray-700">검사 종류</label>
+                        <select id="examType" class="mt-1 p-2 border border-gray-300 rounded w-full">
+                            <option value="health">건강검진</option>
+                            <option value="endoscopy">내시경검사</option>
+                            <option value="ultrasound">초음파검사</option>
+                        </select>
+                    </div>
+
+                    <!-- Memo Section -->
+                    <div class="mb-4">
+                        <label for="memo" class="block text-gray-700">메모</label>
+                        <textarea id="memo" class="mt-1 p-2 border border-gray-300 rounded w-full"></textarea>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex justify-between">
+                        <button type="button" id="registerBtn" class="bg-blue-500 text-white px-4 py-2 rounded">등록</button>
+                        <button type="button" id="deleteBtn" class="bg-red-500 text-white px-4 py-2 rounded">삭제</button>
+                        <button type="button" id="cancelBtn" class="bg-yellow-500 text-white px-4 py-2 rounded">예약 취소</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
