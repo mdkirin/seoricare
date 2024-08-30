@@ -67,7 +67,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const calendarEl = document.getElementById('calendar');
     const events = await fetchEvents(); // Fetch events from Firestore
     console.log('Events to be loaded in calendar:', events); // 콘솔에 이벤트 데이터 출력
-    const calendar = new FullCalendar.Calendar(calendarEl, {
+
+    const calendar = new window.FullCalendar.Calendar(calendarEl, {
+        plugins: [ window.FullCalendar.dayGridPlugin, window.FullCalendar.timeGridPlugin, window.FullCalendar.interactionPlugin ],
         initialView: 'dayGridMonth',
         headerToolbar: {
             left: 'prev,next today',
@@ -95,74 +97,4 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
     calendar.render();
-});
-
-// Event listener for registration
-registerBtn.addEventListener('click', async () => {
-    const time = timeInput.value;
-    const patientName = patientNameInput.value;
-    const chartNumber = chartNumberInput.value;
-    const examType = examTypeInput.value;
-    const memo = memoInput.value;
-
-    if (!time || !patientName || !chartNumber) {
-        Swal.fire('오류', '모든 필수 입력란을 채워주세요.', 'error');
-        return;
-    }
-
-    try {
-        await addDoc(collection(db, 'appointments'), {
-            time,
-            patientName,
-            chartNumber,
-            examType,
-            memo
-        });
-        Swal.fire('성공', '검사 예약이 등록되었습니다.', 'success').then(() => {
-            window.location.reload(); // Reload page to refresh calendar
-        });
-    } catch (error) {
-        Swal.fire('오류', '검사 예약 등록 중 문제가 발생했습니다.', 'error');
-    }
-});
-
-// Event listener for deletion
-deleteBtn.addEventListener('click', async () => {
-    if (selectedEventId) {
-        try {
-            await deleteDoc(doc(db, 'appointments', selectedEventId));
-            Swal.fire('성공', '검사 예약이 삭제되었습니다.', 'success').then(() => {
-                window.location.reload(); // Reload page to refresh calendar
-            });
-        } catch (error) {
-            Swal.fire('오류', '검사 예약 삭제 중 문제가 발생했습니다.', 'error');
-        }
-    } else {
-        Swal.fire('오류', '삭제할 예약을 선택하세요.', 'error');
-    }
-});
-
-// Event listener for canceling
-cancelBtn.addEventListener('click', async () => {
-    if (selectedEventId) {
-        try {
-            await updateDoc(doc(db, 'appointments', selectedEventId), {
-                status: 'canceled'
-            });
-            Swal.fire('성공', '검사 예약이 취소되었습니다.', 'success').then(() => {
-                window.location.reload(); // Reload page to refresh calendar
-            });
-        } catch (error) {
-            Swal.fire('오류', '검사 예약 취소 중 문제가 발생했습니다.', 'error');
-        }
-    } else {
-        Swal.fire('오류', '취소할 예약을 선택하세요.', 'error');
-    }
-});
-
-// Authentication state listener
-onAuthStateChanged(auth, user => {
-    if (!user) {
-        window.location.href = 'login.html'; // Redirect to login if not authenticated
-    }
 });
