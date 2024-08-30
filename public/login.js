@@ -3,12 +3,12 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/fireba
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBTQsXAD6TCv-RLTM-2_LOH8Q91jIurvHo",
-    authDomain: "seoricare.firebaseapp.com",
-    projectId: "seoricare",
-    storageBucket: "seoricare.appspot.com",
-    messagingSenderId: "725312668828",
-    appId: "1:725312668828:web:f4d6c038176ade87d09959"
+    apiKey: "AIzaSyBhrWAlYTe_iiqsuDBXNV5WVGaw7f19XaI",
+    authDomain: "srd-scheduler-1a4b6.firebaseapp.com",
+    projectId: "srd-scheduler-1a4b6",
+    storageBucket: "srd-scheduler-1a4b6.appspot.com",
+    messagingSenderId: "36170465039",
+    appId: "1:36170465039:web:8a67ce81c876d97176887a"
 };
 
 const app = initializeApp(firebaseConfig);

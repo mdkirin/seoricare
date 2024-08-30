@@ -11,25 +11,21 @@
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-    <!-- Top Navigation Bar -->
-    <nav class="bg-indigo-500 p-4 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-white text-2xl font-bold">검사 예약 관리 시스템</h1>
-            <div class="flex items-center">
-                <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
-                <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
-            </div>
-        </div>
-    </nav>
-
     <!-- Main Container -->
-    <div class="container mx-auto px-4 mt-6">
+    <div class="container mx-auto mt-10">
+
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold">검사 예약 관리 시스템</h1>
+        </div>
 
         <!-- Calendar and Appointment Section -->
         <div class="grid grid-cols-4 gap-4">
             <!-- Calendar Section -->
-            <div class="col-span-3 bg-white shadow-md rounded p-4">
-                <div id="calendar"></div>
+            <div class="col-span-2">
+                <div class="bg-white shadow-md rounded p-4">
+                    <div id="calendar"></div>
+                </div>
             </div>
 
             <!-- Appointment Registration Section -->
