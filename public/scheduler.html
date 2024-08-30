@@ -6,26 +6,29 @@
     <title>검사 예약 관리 시스템</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <!-- FullCalendar CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.css" rel="stylesheet">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal">
 
-    <!-- Main Container -->
-    <div class="container mx-auto mt-10">
-
-        <!-- Header -->
-        <div class="text-center mb-6">
-            <h1 class="text-3xl font-bold">검사 예약 관리 시스템</h1>
+    <!-- Top Navigation Bar -->
+    <nav class="bg-indigo-500 p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">검사 예약 관리 시스템</h1>
+            <div class="flex items-center">
+                <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
+            </div>
         </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 mt-6">
 
         <!-- Calendar and Appointment Section -->
         <div class="grid grid-cols-4 gap-4">
             <!-- Calendar Section -->
-            <div class="col-span-2">
-                <div class="bg-white shadow-md rounded p-4">
-                    <div id="calendar"></div>
-                </div>
+            <div class="col-span-3 bg-white shadow-md rounded p-4">
+                <div id="calendar" style="height: 75vh;"></div>
             </div>
 
             <!-- Appointment Registration Section -->
@@ -46,7 +49,6 @@
                         <input type="text" id="chartNumber" class="mt-1 p-2 border border-gray-300 rounded w-full">
                     </div>
 
-                    <!-- Sections for Health Checkups, Endoscopy, and Ultrasound -->
                     <div class="mb-4">
                         <label for="examType" class="block text-gray-700">검사 종류</label>
                         <select id="examType" class="mt-1 p-2 border border-gray-300 rounded w-full">
@@ -56,7 +58,6 @@
                         </select>
                     </div>
 
-                    <!-- Memo Section -->
                     <div class="mb-4">
                         <label for="memo" class="block text-gray-700">메모</label>
                         <textarea id="memo" class="mt-1 p-2 border border-gray-300 rounded w-full"></textarea>
@@ -73,10 +74,7 @@
         </div>
     </div>
 
-    <!-- FullCalendar JS (global version) -->
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.4/index.global.min.js"></script>
-
-    <!-- Load custom script after FullCalendar -->
+    <!-- Import FullCalendar as modules -->
     <script type="module" src="./scheduler.js"></script>
 </body>
 </html>
