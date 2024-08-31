@@ -63,6 +63,7 @@ function renderCalendar(events) {
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: currentView,
+        //themeSystem: 'bootstrap5',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -77,7 +78,8 @@ function renderCalendar(events) {
         slotEventOverlap: false,
         selectable: true,
         events: events,
-        expandRows: true,
+        dayMaxEventRows: 5,
+        expandRows: false,
         locale: 'ko',
         allDaySlot: false,
         eventMinHeight: 20,
@@ -130,7 +132,7 @@ function renderCalendar(events) {
                     start: eventObj.start,
                 });
                 
-                Swal.fire('성공', '이벤트가 성공적으로 이동되었습니다.', 'success');
+                //Swal.fire('성공', '이벤트가 성공적으로 이동되었습니다.', 'success');
             } catch (error) {
                 Swal.fire('오류', '이벤트 이동 중 문제가 발생했습니다.', 'error');
                 console.error('Error updating event:', error);
