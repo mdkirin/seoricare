@@ -37,16 +37,17 @@ async function fetchEvents() {
         const querySnapshot = await getDocs(collection(db, 'appointments'));
         querySnapshot.forEach(doc => {
             const data = doc.data();
-            if (data.start) { // start 필드가 존재할 때만 이벤트로 추가
+            if (data.start) {
                 events.push({
                     id: doc.id,
                     title: `${data.patientName} (${data.examType})`,
-                    start: data.start.toDate(), // Firestore Timestamp를 Date 객체로 변환
+                    start: data.start.toDate(),
                     extendedProps: {
                         chartNumber: data.chartNumber,
                         memo: data.memo,
                         patientName: data.patientName,
-                        examType: data.examType
+                        examType: data.examType,
+                        status: data.status || 'active' // 기본 상태는 'active'
                     }
                 });
             }
@@ -61,16 +62,16 @@ function renderCalendar(events) {
     const calendarEl = document.getElementById('calendar');
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: currentView, // 저장된 뷰 사용
+        initialView: currentView,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay'
         },
-        timeZone: 'local', // 시간대를 로컬로 설정
+        timeZone: 'local',
         slotMinTime: "08:00:00",
         slotMaxTime: "18:00:00",
-        defaultTimedEventDuration: "00:30", // 기본 이벤트 지속 시간 설정
+        defaultTimedEventDuration: "00:30",
         height: 'auto',
         contentHeight: 'auto',
         slotEventOverlap: false,
@@ -81,11 +82,11 @@ function renderCalendar(events) {
         allDaySlot: false,
         eventMinHeight: 20,
         nowIndicator: true,
-        editable: true, // 이벤트를 드래그할 수 있도록 설정
+        editable: true,
         eventDurationEditable: false,
         eventResizableFromStart: true,
         datesSet: function(view) {
-            currentView = view.view.type; // 현재 뷰 저장
+            currentView = view.view.type;
         },
         select: function(info) {
             timeInput.value = info.startStr.substring(11, 16);
@@ -97,8 +98,13 @@ function renderCalendar(events) {
             const eventObj = info.event;
             selectedEventId = eventObj.id;
 
-            // Firestore에서 Date 객체로 가져왔으므로 시간 변환 불필요
-            timeInput.value = eventObj.start.toISOString().substring(11, 16); // 시간을 'HH:mm' 형식으로 표시
+            const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+
+            timeInput.value = localStartTime;
             patientNameInput.value = eventObj.extendedProps.patientName;
             chartNumberInput.value = eventObj.extendedProps.chartNumber;
             examTypeInput.value = eventObj.extendedProps.examType;
@@ -107,27 +113,35 @@ function renderCalendar(events) {
             registerBtn.classList.add('hidden');
             updateBtn.classList.remove('hidden');
         },
+        eventDidMount: function(info) {
+            // 이벤트가 취소된 상태일 때, 취소선 스타일을 추가하고 굵기를 설정
+            if (info.event.extendedProps.status === 'canceled') {
+                info.el.style.textDecoration = 'line-through'; // 취소선 스타일 추가
+                info.el.style.textDecorationThickness = '3px'; // 취소선 굵기 설정
+                info.el.style.color = 'gray'; // 텍스트 색상 변경 (선택 사항)
+            }
+        },
         eventDrop: async function(info) {
-            // 이벤트가 드래그 앤 드롭된 후 실행
             const eventObj = info.event;
             selectedEventId = eventObj.id;
 
             try {
                 await updateDoc(doc(db, 'appointments', selectedEventId), {
-                    start: eventObj.start, // 새로운 시작 시간을 Firestore에 저장
+                    start: eventObj.start,
                 });
                 
                 Swal.fire('성공', '이벤트가 성공적으로 이동되었습니다.', 'success');
             } catch (error) {
                 Swal.fire('오류', '이벤트 이동 중 문제가 발생했습니다.', 'error');
                 console.error('Error updating event:', error);
-                info.revert(); // 오류 발생 시 위치를 원래대로 되돌림
+                info.revert();
             }
         }
     });
 
     calendar.render();
 }
+
 
 // Initialize calendar
 document.addEventListener('DOMContentLoaded', async function () {

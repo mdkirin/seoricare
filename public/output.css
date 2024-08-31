@@ -553,3 +553,8 @@ video {
   --tw-contain-paint:  ;
   --tw-contain-style:  ;
 }
+
+.fc-event-canceled {
+  text-decoration: line-through; /* 취소선 스타일 */
+  color: gray; /* 취소된 이벤트의 텍스트 색상 */
+}
