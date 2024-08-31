@@ -25,6 +25,7 @@ const registerBtn = document.getElementById('registerBtn');
 const updateBtn = document.getElementById('updateBtn');
 const deleteBtn = document.getElementById('deleteBtn');
 const cancelBtn = document.getElementById('cancelBtn');
+const restoreBtn = document.getElementById('restoreBtn');
 const timeInput = document.getElementById('time');
 const patientNameInput = document.getElementById('patientName');
 const chartNumberInput = document.getElementById('chartNumber');
@@ -116,24 +117,34 @@ function renderCalendar(events) {
             const eventObj = info.event;
             selectedEventId = eventObj.id;
             selectedDate = eventObj.start; // Update selected date on event click
-            console.log('Event clicked, selected date updated to:', selectedDate);
-
+        
             const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false
             });
-
+        
             timeInput.value = localStartTime;
             patientNameInput.value = eventObj.extendedProps.patientName;
             chartNumberInput.value = eventObj.extendedProps.chartNumber;
             examTypeInput.value = eventObj.extendedProps.examType;
             memoInput.value = eventObj.extendedProps.memo || '';
-
-            registerBtn.classList.add('hidden');
-            updateBtn.classList.remove('hidden');
+        
+            if (eventObj.extendedProps.status === 'canceled') {
+                restoreBtn.classList.remove('hidden');
+                registerBtn.classList.add('hidden');
+                updateBtn.classList.add('hidden');
+                deleteBtn.classList.add('hidden');
+                cancelBtn.classList.add('hidden');
+            } else {
+                restoreBtn.classList.add('hidden');
+                registerBtn.classList.add('hidden');
+                updateBtn.classList.remove('hidden');
+                deleteBtn.classList.remove('hidden');
+                cancelBtn.classList.remove('hidden');
+            }
         },
-        eventDidMount: function(info) {
+                eventDidMount: function(info) {
             if (info.event.extendedProps.status === 'canceled') {
                 info.el.style.textDecoration = 'line-through';
                 info.el.style.textDecorationThickness = '3px';
@@ -302,6 +313,37 @@ cancelBtn.addEventListener('click', async () => {
         Swal.fire('Error', 'Please select an appointment to cancel.', 'error');
     }
 });
+
+restoreBtn.addEventListener('click', async () => {
+    if (selectedEventId) {
+        try {
+            await updateDoc(doc(db, 'appointments', selectedEventId), {
+                status: 'active'
+            });
+            Swal.fire({
+                icon: 'success',
+                title: '복구 성공',
+                text: '검사 예약이 복구되었습니다.',
+                showConfirmButton: false,
+                timer: 1000,
+                showClass: {
+                    popup: 'swal2-fade-in'
+                },
+                hideClass: {
+                    popup: 'swal2-fade-out'
+                }
+            }).then(async () => {
+                const events = await fetchEvents();
+                renderCalendar(events); // Refresh calendar without reloading
+            });
+        } catch (error) {
+            Swal.fire('오류', '검사 예약 복구 중 문제가 발생했습니다.', 'error');
+        }
+    } else {
+        Swal.fire('오류', '복구할 예약을 선택하세요.', 'error');
+    }
+});
+
 
 // Authentication state listener
 onAuthStateChanged(auth, user => {
