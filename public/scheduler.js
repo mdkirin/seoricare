@@ -72,11 +72,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         },
         slotMinTime: "08:00:00",
         slotMaxTime: "18:00:00",
-        slotDuration: '00:30:00',
-        height: 'auto',
+        height: 'auto', // 변경된 부분: 높이를 100%로 설정
+        contentHeight: 'auto', // 필요에 따라 자동 높이 조정
         slotEventOverlap: false,
         selectable: true,
         events: events, // Use the fetched events
+        expandRows: true,
+        locale: 'ko',
+        allDaySlot: false,
+        eventMinHeight: 20,
+        nowIndicator: true,
+        editable: true,
         select: function(info) {
             timeInput.value = info.startStr.substring(11, 16);
             selectedEventId = null; // New event creation mode
@@ -84,7 +90,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         eventClick: function(info) {
             const eventObj = info.event;
             selectedEventId = eventObj.id;
-            timeInput.value = eventObj.start.toISOString().substring(11, 16);
+
+            // 시간 값을 로컬 시간대로 변환
+            const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+
+            timeInput.value = localStartTime; // 변환된 시간을 등록창에 표시
             patientNameInput.value = eventObj.extendedProps.patientName;
             chartNumberInput.value = eventObj.extendedProps.chartNumber;
             examTypeInput.value = eventObj.extendedProps.examType;

@@ -8,11 +8,11 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
 </head>
-<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+<body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
 
     <!-- Top Navigation Bar -->
     <nav class="bg-indigo-500 p-4 shadow-md">
-        <div class="container mx-auto flex justify-between items-center">
+        <div class="flex justify-between items-center">
             <h1 class="text-white text-2xl font-bold">검사 예약 관리 시스템</h1>
             <div class="flex items-center">
                 <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
@@ -22,13 +22,12 @@
     </nav>
 
     <!-- Main Container -->
-    <div class="container mx-auto px-4 mt-6">
-
+    <div class="px-4 mt-0 h-screen">
         <!-- Calendar and Appointment Section -->
-        <div class="grid grid-cols-4 gap-4">
+        <div class="grid grid-cols-4 gap-4 h-full">
             <!-- Calendar Section -->
-            <div class="col-span-3 bg-white shadow-md rounded p-4">
-                <div id="calendar" style="height: 75vh;"></div>
+            <div class="col-span-3 bg-white shadow-md rounded p-4 h-full">
+                <div id="calendar" class="h-full"></div>
             </div>
 
             <!-- Appointment Registration Section -->
