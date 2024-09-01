@@ -8,6 +8,12 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+    <!-- Include in the <head> section -->
+    <link rel="stylesheet" href="../node_modules/flatpickr/dist/flatpickr.min.css">
+
+    <!-- Include before the closing </body> tag -->
+    <script src="../node_modules/flatpickr/dist/flatpickr.min.js"></script>
+
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
 
@@ -77,6 +83,11 @@
     </div>
 
     <!-- Import FullCalendar as modules -->
-    <script type="module" src="./scheduler.js"></script>
+    <script type="module" src="js/firebase-config.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/flatpickr-setup.js"></script>
+    <script type="module" src="js/calendar.js"></script>
+    <script type="module" src="js/event-handlers.js"></script>
+
 </body>
 </html>

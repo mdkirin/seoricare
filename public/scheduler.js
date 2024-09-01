@@ -48,6 +48,18 @@ if (logoutBtn) {
     logoutBtn.addEventListener('click', handleLogout);
 }
 
+// 예약 시각 필드에 Flatpickr 적용
+flatpickr("#time", {
+    enableTime: true,
+    noCalendar: true,
+    dateFormat: "H:i",
+    time_24hr: true,
+    minuteIncrement: 30,
+    defaultDate: timeInput.value // 현재 입력된 시간을 기본값으로 설정
+});
+
+
+
 async function fetchEvents() {
     const events = [];
     try {
