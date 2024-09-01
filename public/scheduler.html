@@ -14,7 +14,9 @@
     <link rel="stylesheet" href="../node_modules/flatpickr/dist/flatpickr.min.css">
 
     <script src="../node_modules/flatpickr/dist/flatpickr.min.js"></script>
-
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@material/web@0.30.0/dist/mdc.material.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@material/web@0.30.0/dist/mdc.material.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
 
@@ -38,54 +40,116 @@
                 <div id="calendar" class="h-full"></div>
             </div>
 
-            <!-- Appointment Registration Section -->
-            <div class="col-span-1 bg-white shadow-md rounded p-4">
-                <h2 class="text-xl font-semibold mb-4 text-indigo-700">검사 등록</h2>
-                
-                <form id="appointmentForm">
-                    <div class="mb-4">
-                        <label for="time" class="block text-gray-700">예약 시각</label>
-                        <input type="time" id="time" class="mt-1 p-2 border border-gray-300 rounded w-full">
-                    </div>
-                    <div class="mb-4">
-                        <label for="patientName" class="block text-gray-700">환자 이름</label>
-                        <input type="text" id="patientName" class="mt-1 p-2 border border-gray-300 rounded w-full">
-                    </div>
-                    <div class="mb-4">
-                        <label for="chartNumber" class="block text-gray-700">차트 번호</label>
-                        <input type="text" id="chartNumber" class="mt-1 p-2 border border-gray-300 rounded w-full">
-                    </div>
+            <!-- Registration Section -->
+            <div class="registration-section bg-white shadow-md rounded p-4 h-full">
+                <div class="mb-4">
+                    <input type="text" id="time" name="time" placeholder="예약 시각 선택" class="border p-2 w-full">
+                </div>
+                <div class="mb-4 grid grid-cols-2 gap-2">
+                    <input type="text" id="patientName" name="patientName" placeholder="환자 이름" class="border p-2 w-full">
+                    <input type="text" id="chartNumber" name="chartNumber" placeholder="차트 번호" class="border p-2 w-full">
+                </div>
 
-                    <div class="mb-4">
-                        <label for="examType" class="block text-gray-700">검사 종류</label>
-                        <select id="examType" class="mt-1 p-2 border border-gray-300 rounded w-full">
-                            <option value="health">건강검진</option>
-                            <option value="endoscopy">내시경검사</option>
-                            <option value="ultrasound">초음파검사</option>
-                        </select>
-                    </div>
+                <!-- 건강검진 항목 -->
+                <h3 class="cursor-pointer" onclick="toggleSection('healthCheckSection')">▼ 건강검진</h3>
+                <div id="healthCheckSection" class="mb-4 section hidden">
+                    <button class="btn-exam" data-value="lipidScreen">이상지질</button>
+                    <button class="btn-exam" data-value="lsmScreen">생활습관</button>
+                    <button class="btn-exam" data-value="elderScreen">노인신체</button>
+                    <button class="btn-exam" data-value="cognitionScreen">인지기능</button>
+                    <button class="btn-exam" data-value="depressionScreen">정신건강</button>
+                    <button class="btn-exam" data-value="hbvScreen">B형간염</button>
+                    <button class="btn-exam" data-value="bmdScreen">골밀도</button>
+                </div>
 
-                    <div class="mb-4">
-                        <label for="memo" class="block text-gray-700">메모</label>
-                        <textarea id="memo" class="mt-1 p-2 border border-gray-300 rounded w-full"></textarea>
-                    </div>
+<!-- 암검진 항목 -->
+<h3 class="cursor-pointer" onclick="toggleSection('cancerCheckSection')">▼ 암검진</h3>
+<div id="cancerCheckSection" class="mb-4 section hidden">
+    <div class="flex items-center">
+        <button class="btn-exam" data-value="stomachScreen">위암</button>
+        <div class="sub-options hidden ml-2" data-type="stomachScreen">
+            <button class="btn-cancer-option" data-type="stomachScreen" data-value="deductible0%">0%</button>
+            <button class="btn-cancer-option" data-type="stomachScreen" data-value="deductible10%">10%</button>
+            <button class="btn-cancer-type" data-type="stomachScreen" data-value="nonsedation">비진정</button>
+            <button class="btn-cancer-type" data-type="stomachScreen" data-value="sedation">진정</button>
+        </div>
+    </div>
 
-                    <!-- Buttons -->
-                    <div class="flex justify-between">
-                        <button type="button" id="registerBtn" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded">등록</button>
-                        <button type="button" id="updateBtn" class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded hidden">수정</button>
-                        <button type="button" id="deleteBtn" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded">삭제</button>
-                        <button type="button" id="cancelBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white px-4 py-2 rounded">예약 취소</button>
-                        <button id="restoreBtn" class="hidden bg-green-500 text-white px-4 py-2 rounded">복구</button>
-                    </div>
-                </form>
+    <div class="flex items-center">
+        <button class="btn-exam" data-value="colonScreen">대장암</button>
+        <div class="sub-options hidden ml-2" data-type="colonScreen">
+            <button class="btn-cancer-option" data-type="colonScreen" data-value="1st">1차</button>
+            <button class="btn-cancer-option" data-type="colonScreen" data-value="2nd">2차</button>
+        </div>
+    </div>
+
+    <div class="flex items-center">
+        <button class="btn-exam" data-value="liverScreen">간암</button>
+        <div class="sub-options hidden ml-2" data-type="liverScreen">
+            <button class="btn-cancer-option" data-type="liverScreen" data-value="deductible0%">0%</button>
+            <button class="btn-cancer-option" data-type="liverScreen" data-value="deductible10%">10%</button>
+        </div>
+    </div>
+</div>
+
+<!-- 내시경 항목 -->
+<h3 class="cursor-pointer" onclick="toggleSection('endoscopySection')">▼ 내시경</h3>
+<div id="endoscopySection" class="mb-4 section hidden">
+    <div class="flex items-center">
+        <button class="btn-exam" data-value="endoscopy">위</button>
+        <div class="sub-options flex ml-2" data-type="endoscopy">
+            <button class="btn-cancer-type" data-type="endoscopy" data-value="sedation">진정</button>
+            <button class="btn-cancer-type" data-type="endoscopy" data-value="nonsedation">비진정</button>
+        </div>
+    </div>
+    
+    <button class="btn-exam" data-value="colonoscopy">대장</button>
+</div>
+
+
+                <!-- 초음파 항목 -->
+                <h3 class="cursor-pointer" onclick="toggleSection('ultrasoundSection')">▼ 초음파</h3>
+                <div id="ultrasoundSection" class="mb-4 section hidden">
+                    <button class="btn-exam" data-value="abdUS">상복부</button>
+                    <button class="btn-exam" data-value="thyroidUS">갑상선</button>
+                    <button class="btn-exam" data-value="carotidUS">경동맥</button>
+                </div>
+
+                <!-- 기타검진 항목 -->
+                <h3 class="cursor-pointer" onclick="toggleSection('otherCheckSection')">▼ 기타검진</h3>
+                <div id="otherCheckSection" class="mb-4 section hidden">
+                    <button class="btn-exam" data-value="generalRecru">일반채용</button>
+                    <button class="btn-exam" data-value="civilRecru">공무원채용</button>
+                    <button class="btn-exam" data-value="TbScreen">단순결핵</button>
+                    <button class="btn-exam" data-value="latentTbScreen">잠복결핵</button>
+                    <button class="btn-exam" data-value="healthCert">보건증</button>
+                </div>
+
+                <!-- 메모 -->
+                <label for="memo" class="block">메모:</label>
+                <textarea id="memo" name="memo" placeholder="추가 메모" class="border p-2 w-full mb-4"></textarea>
+
+                <!-- 버튼들 -->
+                <div class="flex space-x-2">
+                    <button id="registerBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">등록</button>
+                    <button id="resetBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">초기화</button>
+                    <button id="updateBtn" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded hidden">수정</button>
+                    <button id="deleteBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded hidden">삭제</button>
+                    <button id="cancelBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded hidden">예약 취소</button>
+                    <button id="restoreBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded hidden">예약 복구</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Import FullCalendar as modules -->
     <script type="module" src="./scheduler.js"></script>
-
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.classList.toggle('hidden');
+        }
+    </script>
 
 </body>
 </html>

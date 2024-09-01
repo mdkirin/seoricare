@@ -579,3 +579,129 @@ video {
       opacity: 0;
   }
 }
+
+/* output.css */
+
+/* 버튼 스타일 */
+.btn-health-check, .btn-cancer-check, .btn-cancer-option, .btn-cancer-type {
+  background-color: #f3f3f3;
+  color: #333;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.btn-health-check.active, .btn-cancer-check.active, .btn-cancer-option.active, .btn-cancer-type.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-health-check:hover, .btn-cancer-check:hover, .btn-cancer-option:hover, .btn-cancer-type:hover {
+  background-color: #0056b3;
+  color: white;
+}
+
+.active {
+  background-color: #4A90E2;
+  color: white;
+  border: 1px solid #3A6EA5;
+}
+
+.hidden {
+  display: none;
+}
+
+.btn-exam {
+  background-color: #e0e0e0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 8px 16px;
+  margin: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-exam.active {
+  background-color: #4A90E2;
+  color: white;
+}
+
+.btn-exam:hover {
+  background-color: #8a8fe7;
+}
+
+.sub-options {
+  display: flex;
+  gap: 0.5rem; /* 버튼 사이의 간격을 설정 */
+}
+
+.btn-cancer-option.active, .btn-cancer-type.active {
+  background-color: #4A90E2;
+  color: white;
+}
+
+.btn-cancer-option, .btn-cancer-type {
+  background-color: #e0e0e0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 2px;
+}
+
+.mdc-segmented-button__segment.active {
+  background-color: #4A90E2;
+  color: white;
+}
+
+.sub-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: 10px;
+}
+
+.sub-options {
+  display: flex;
+  gap: 10px; /* 버튼 사이의 간격 */
+  margin-left: 10px;
+}
+
+.btn-cancer-option.active, .btn-cancer-type.active {
+  background-color: #4A90E2;
+  color: white;
+}
+
+.btn-cancer-option, .btn-cancer-type {
+  background-color: #e0e0e0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 2px;
+}
+
+.sub-options {
+  display: flex;
+  gap: 10px; /* 버튼 사이의 간격 */
+  margin-left: 10px;
+}
+
+.btn-cancer-option.active, .btn-cancer-type.active {
+  background-color: #4A90E2;
+  color: white;
+}
+
+.btn-cancer-option, .btn-cancer-type {
+  background-color: #e0e0e0;
+  color: #333;
+  border: 1px solid #ccc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 2px;
+}
