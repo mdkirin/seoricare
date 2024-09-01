@@ -11,7 +11,6 @@
   "license": "ISC",
   "dependencies": {
     "autoprefixer": "^10.4.20",
-    "flatpickr": "^4.6.13",
     "fullcalendar": "^6.1.15",
     "postcss": "^8.4.41",
     "tailwindcss": "^3.4.10"
