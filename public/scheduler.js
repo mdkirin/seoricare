@@ -1,5 +1,5 @@
 // scheduler.js
-import { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from './firebase.js'; // Import Firebase services and logout function
+import { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onAuthStateChanged } from './firebase.js'; // Import Firebase services and logout function
 
 let calendar; // Declare calendar as a global variable
 let selectedEventId = null;
@@ -26,14 +26,7 @@ if (logoutBtn) {
 }
 
 // 예약 시각 필드에 Flatpickr 적용
-flatpickr("#time", {
-    enableTime: true,
-    noCalendar: true,
-    dateFormat: "H:i",
-    time_24hr: true,
-    minuteIncrement: 30,
-    defaultDate: timeInput.value // 현재 입력된 시간을 기본값으로 설정
-});
+initializeFlatpickr();
 
 function initializeFlatpickr() {
     flatpickr("#time", {
@@ -43,8 +36,7 @@ function initializeFlatpickr() {
         time_24hr: true,
         minuteIncrement: 30,
         defaultDate: timeInput.value || "09:00", // 초기값 설정
-        onOpen: function(selectedDates, dateStr, instance) {
-            // 타임피커가 열릴 때 기본값을 selectedDate로 설정
+        onOpen: function (selectedDates, dateStr, instance) {
             const defaultTime = selectedDate ? selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "09:00";
             instance.setDate(defaultTime, false); // 두 번째 인자를 false로 설정하여 onChange 트리거 방지
         }
@@ -67,7 +59,7 @@ async function fetchEvents() {
                         memo: data.memo,
                         patientName: data.patientName,
                         examType: data.examType,
-                        status: data.status || 'active' // Default status
+                        status: data.status || 'active'
                     }
                 });
             }
@@ -81,11 +73,10 @@ async function fetchEvents() {
 function renderCalendar(events) {
     const calendarEl = document.getElementById('calendar');
     if (!calendar) {
-        // Only initialize the calendar if it doesn't exist
         calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: currentViewType, // Use stored view type
-            initialDate: currentViewDate, // Use stored date
-            navLinks: true, // Enable clickable dates
+            initialView: currentViewType,
+            initialDate: currentViewDate,
+            navLinks: true,
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -109,29 +100,29 @@ function renderCalendar(events) {
             editable: true,
             eventDurationEditable: false,
             eventResizableFromStart: true,
-            navLinkDayClick: function(date, jsEvent) {
-                currentViewDate = date; // Update the current view date
-                selectedDate = date; // Ensure selectedDate is updated
-                calendar.changeView('timeGridDay', currentViewDate); // Switch to day view
+            navLinkDayClick: function (date) {
+                currentViewDate = date;
+                selectedDate = date;
+                calendar.changeView('timeGridDay', currentViewDate);
             },
             weekNumbers: true,
-            navLinkWeekClick: function(weekStart, jsEvent) {
-                currentViewDate = weekStart; // Update the current view date
-                selectedDate = weekStart; // Ensure selectedDate is updated
-                calendar.changeView('timeGridWeek', currentViewDate); // Switch to week view
+            navLinkWeekClick: function (weekStart) {
+                currentViewDate = weekStart;
+                selectedDate = weekStart;
+                calendar.changeView('timeGridWeek', currentViewDate);
             },
-            select: function(info) {
-                selectedDate = info.start; // Set selected date on select
+            select: function (info) {
+                selectedDate = info.start;
                 timeInput.value = info.startStr.substring(11, 16);
                 selectedEventId = null;
                 registerBtn.classList.remove('hidden');
                 updateBtn.classList.add('hidden');
             },
-            eventClick: function(info) {
+            eventClick: function (info) {
                 const eventObj = info.event;
                 selectedEventId = eventObj.id;
-                selectedDate = eventObj.start; // Update selected date on event click
-                currentViewDate = eventObj.start; // Update view date
+                selectedDate = eventObj.start;
+                currentViewDate = eventObj.start;
 
                 const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
                     hour: '2-digit',
@@ -144,9 +135,6 @@ function renderCalendar(events) {
                 chartNumberInput.value = eventObj.extendedProps.chartNumber;
                 examTypeInput.value = eventObj.extendedProps.examType;
                 memoInput.value = eventObj.extendedProps.memo || '';
-
-                initializeFlatpickr();
-
 
                 if (eventObj.extendedProps.status === 'canceled') {
                     restoreBtn.classList.remove('hidden');
@@ -162,38 +150,43 @@ function renderCalendar(events) {
                     cancelBtn.classList.remove('hidden');
                 }
             },
-            eventDidMount: function(info) {
+            eventDidMount: function (info) {
                 if (info.event.extendedProps.status === 'canceled') {
                     info.el.style.textDecoration = 'line-through';
                     info.el.style.textDecorationThickness = '3px';
                     info.el.style.color = 'gray';
                 }
             },
-            eventDrop: async function(info) {
+            eventDrop: async function (info) {
                 const eventObj = info.event;
                 selectedEventId = eventObj.id;
+                const originalDate = info.oldEvent.start;
 
-                try {
-                    await updateDoc(doc(db, 'appointments', selectedEventId), {
-                        start: eventObj.start,
-                    });
-                } catch (error) {
-                    Swal.fire('Error', 'There was an issue moving the event.', 'error');
-                    console.error('Error updating event:', error);
-                    info.revert();
-                }
+                const beforeData = `시각: ${originalDate.toLocaleString()}`;
+                const afterData = `새 시각: ${eventObj.start.toLocaleString()}`;
+
+                showConfirmationDialog(beforeData, afterData, async () => {
+                    try {
+                        await updateDoc(doc(db, 'appointments', selectedEventId), {
+                            start: eventObj.start,
+                        });
+                    } catch (error) {
+                        Swal.fire('Error', 'There was an issue moving the event.', 'error');
+                        console.error('Error updating event:', error);
+                        info.revert();
+                    }
+                });
             },
-            viewDidMount: function() {
-                // Save current view type and date on view change
+            viewDidMount: function () {
                 currentViewType = calendar.view.type;
                 currentViewDate = calendar.getDate();
             }
         });
 
-        calendar.render(); // Render the calendar
+        calendar.render();
     } else {
-        calendar.removeAllEvents(); // Clear existing events
-        calendar.addEventSource(events); // Add new events
+        calendar.removeAllEvents();
+        calendar.addEventSource(events);
     }
 }
 
@@ -205,14 +198,12 @@ function saveCurrentViewState() {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-    const events = await fetchEvents(); // Fetch events from Firestore
-    initializeFlatpickr();
-    renderCalendar(events); // Render the calendar
+    const events = await fetchEvents();
+    renderCalendar(events);
 });
 
-// Event listener for registration
 registerBtn.addEventListener('click', async () => {
-    saveCurrentViewState(); // Save view state
+    saveCurrentViewState();
 
     const time = timeInput.value;
     const patientName = patientNameInput.value;
@@ -231,40 +222,30 @@ registerBtn.addEventListener('click', async () => {
 
     const utcDate = new Date(selectedDate.toISOString());
 
-    try {
-        await addDoc(collection(db, 'appointments'), {
-            start: utcDate,
-            patientName,
-            chartNumber,
-            examType,
-            memo
-        });
+    const beforeData = "기존 데이터 없음"; // 신규 등록이므로 기존 데이터가 없음
+    const afterData = `예약 시각: ${utcDate.toLocaleString()} / 환자: ${patientName} / 차트 번호: ${chartNumber} / 검사 종류: ${examType}`;
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Success',
-            text: 'Appointment registered successfully.',
-            showConfirmButton: false,
-            timer: 1000,
-        }).then(async () => {
+    showConfirmationDialog(beforeData, afterData, async () => {
+        try {
+            await addDoc(collection(db, 'appointments'), {
+                start: utcDate,
+                patientName,
+                chartNumber,
+                examType,
+                memo
+            });
+
+            Swal.fire('Success', 'Appointment registered successfully.', 'success');
             const events = await fetchEvents();
-            renderCalendar(events); // Refresh calendar without reloading
-        });
-
-    } catch (error) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'There was an issue registering the appointment.',
-            showConfirmButton: false,
-            timer: 1000,
-        });
-    }
+            renderCalendar(events);
+        } catch (error) {
+            Swal.fire('Error', 'There was an issue registering the appointment.', 'error');
+        }
+    });
 });
 
-// Event listener for update
 updateBtn.addEventListener('click', async () => {
-    saveCurrentViewState(); // Save view state
+    saveCurrentViewState();
 
     if (!selectedEventId) {
         Swal.fire('Error', 'Please select an appointment to update.', 'error');
@@ -288,84 +269,107 @@ updateBtn.addEventListener('click', async () => {
 
     const utcDate = new Date(selectedDate.toISOString());
 
-    try {
-        await updateDoc(doc(db, 'appointments', selectedEventId), {
-            start: utcDate,
-            patientName,
-            chartNumber,
-            examType,
-            memo
-        });
-        Swal.fire('Success', 'Appointment updated successfully.', 'success').then(async () => {
+    const beforeData = `시각: ${currentViewDate.toLocaleString()} / 환자: ${patientName} / 차트 번호: ${chartNumber} / 검사 종류: ${examType}`;
+    const afterData = `새 시각: ${utcDate.toLocaleString()} / 환자: ${patientName} / 차트 번호: ${chartNumber} / 검사 종류: ${examType}`;
+
+    showConfirmationDialog(beforeData, afterData, async () => {
+        try {
+            await updateDoc(doc(db, 'appointments', selectedEventId), {
+                start: utcDate,
+                patientName,
+                chartNumber,
+                examType,
+                memo
+            });
+            Swal.fire('Success', 'Appointment updated successfully.', 'success');
             const events = await fetchEvents();
-            renderCalendar(events); // Refresh calendar without reloading
-        });
-    } catch (error) {
-        Swal.fire('Error', 'There was an issue updating the appointment.', 'error');
-    }
+            renderCalendar(events);
+        } catch (error) {
+            Swal.fire('Error', 'There was an issue updating the appointment.', 'error');
+        }
+    });
 });
 
-// Event listeners for deletion and cancellation...
 deleteBtn.addEventListener('click', async () => {
-    saveCurrentViewState(); // Save view state
+    saveCurrentViewState();
 
     if (selectedEventId) {
-        try {
-            await deleteDoc(doc(db, 'appointments', selectedEventId));
-            Swal.fire('Success', 'Appointment deleted successfully.', 'success').then(async () => {
+        const beforeData = `예약 ID: ${selectedEventId} 삭제 예정`;
+
+        showConfirmationDialog(beforeData, "삭제됨", async () => {
+            try {
+                await deleteDoc(doc(db, 'appointments', selectedEventId));
+                Swal.fire('Success', 'Appointment deleted successfully.', 'success');
                 const events = await fetchEvents();
-                renderCalendar(events); // Refresh calendar without reloading
-            });
-        } catch (error) {
-            Swal.fire('Error', 'There was an issue deleting the appointment.', 'error');
-        }
+                renderCalendar(events);
+            } catch (error) {
+                Swal.fire('Error', 'There was an issue deleting the appointment.', 'error');
+            }
+        });
     } else {
         Swal.fire('Error', 'Please select an appointment to delete.', 'error');
     }
 });
 
 cancelBtn.addEventListener('click', async () => {
-    saveCurrentViewState(); // Save view state
+    saveCurrentViewState();
 
     if (selectedEventId) {
-        try {
-            await updateDoc(doc(db, 'appointments', selectedEventId), {
-                status: 'canceled'
-            });
-            Swal.fire('Success', 'Appointment canceled successfully.', 'success').then(async () => {
+        const beforeData = `예약 ID: ${selectedEventId} 활성화`;
+        const afterData = "취소됨";
+
+        showConfirmationDialog(beforeData, afterData, async () => {
+            try {
+                await updateDoc(doc(db, 'appointments', selectedEventId), {
+                    status: 'canceled'
+                });
+                Swal.fire('Success', 'Appointment canceled successfully.', 'success');
                 const events = await fetchEvents();
-                renderCalendar(events); // Refresh calendar without reloading
-            });
-        } catch (error) {
-            Swal.fire('Error', 'There was an issue canceling the appointment.', 'error');
-        }
+                renderCalendar(events);
+            } catch (error) {
+                Swal.fire('Error', 'There was an issue canceling the appointment.', 'error');
+            }
+        });
     } else {
         Swal.fire('Error', 'Please select an appointment to cancel.', 'error');
     }
 });
 
 restoreBtn.addEventListener('click', async () => {
-    saveCurrentViewState(); // Save view state
+    saveCurrentViewState();
 
     if (selectedEventId) {
-        try {
-            await updateDoc(doc(db, 'appointments', selectedEventId), {
-                status: 'active'
-            });
-            Swal.fire({
-                icon: 'success',
-                title: '복구 성공',
-                text: '검사 예약이 복구되었습니다.',
-                showConfirmButton: false,
-                timer: 1000,
-            }).then(async () => {
+        const beforeData = "취소됨";
+        const afterData = `예약 ID: ${selectedEventId} 활성화`;
+
+        showConfirmationDialog(beforeData, afterData, async () => {
+            try {
+                await updateDoc(doc(db, 'appointments', selectedEventId), {
+                    status: 'active'
+                });
+                Swal.fire('Success', 'Appointment restored successfully.', 'success');
                 const events = await fetchEvents();
-                renderCalendar(events); // Refresh calendar without reloading
-            });
-        } catch (error) {
-            Swal.fire('오류', '검사 예약 복구 중 문제가 발생했습니다.', 'error');
-        }
+                renderCalendar(events);
+            } catch (error) {
+                Swal.fire('Error', 'There was an issue restoring the appointment.', 'error');
+            }
+        });
     } else {
-        Swal.fire('오류', '복구할 예약을 선택하세요.', 'error');
+        Swal.fire('Error', 'Please select an appointment to restore.', 'error');
     }
 });
+
+function showConfirmationDialog(beforeData, afterData, callback) {
+    Swal.fire({
+        title: '변경 확인',
+        html: `<strong>변경 전:</strong><br>${beforeData}<br><br><strong>변경 후:</strong><br>${afterData}`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '확인',
+        cancelButtonText: '취소'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            callback();
+        }
+    });
+}

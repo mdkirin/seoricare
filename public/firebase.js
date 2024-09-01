@@ -37,4 +37,4 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-export { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc };
+export { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc,onAuthStateChanged };
