@@ -15,12 +15,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
+let calendar; // Declare calendar as a global variable
 let selectedEventId = null;
-let currentView = 'timeGridWeek'; // Current view state
-let selectedDate = new Date(); // Initially set to today's date
+let currentViewType = 'timeGridWeek'; // Default view type
+let currentViewDate = new Date(); // Default to today's date
+let selectedDate = new Date(); // Default to today's date
 
 // DOM elements
-const appointmentForm = document.getElementById('appointmentForm');
 const registerBtn = document.getElementById('registerBtn');
 const updateBtn = document.getElementById('updateBtn');
 const deleteBtn = document.getElementById('deleteBtn');
@@ -76,98 +77,125 @@ async function fetchEvents() {
 
 function renderCalendar(events) {
     const calendarEl = document.getElementById('calendar');
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: currentView,
-        navLinks: true, // Enable clickable dates
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        timeZone: 'local',
-        slotMinTime: "08:00:00",
-        slotMaxTime: "18:00:00",
-        defaultTimedEventDuration: "00:30",
-        height: 'auto',
-        contentHeight: 'auto',
-        slotEventOverlap: false,
-        selectable: true,
-        events: events,
-        dayMaxEventRows: 5,
-        expandRows: false,
-        locale: 'ko',
-        allDaySlot: false,
-        eventMinHeight: 20,
-        nowIndicator: true,
-        editable: true,
-        eventDurationEditable: false,
-        eventResizableFromStart: true,
-        navLinkDayClick: function(date, jsEvent) {
-            selectedDate = date; // Update the selected date
-            calendar.changeView('timeGridDay', selectedDate); // Switch to day view
-            console.log('Navigating to selected date:', selectedDate);
-        },
-        select: function(info) {
-            timeInput.value = info.startStr.substring(11, 16);
-            selectedEventId = null;
-            registerBtn.classList.remove('hidden');
-            updateBtn.classList.add('hidden');
-        },
-        eventClick: function(info) {
-            const eventObj = info.event;
-            selectedEventId = eventObj.id;
-            selectedDate = eventObj.start; // Update selected date on event click
-        
-            const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
-            });
-        
-            timeInput.value = localStartTime;
-            patientNameInput.value = eventObj.extendedProps.patientName;
-            chartNumberInput.value = eventObj.extendedProps.chartNumber;
-            examTypeInput.value = eventObj.extendedProps.examType;
-            memoInput.value = eventObj.extendedProps.memo || '';
-        
-            if (eventObj.extendedProps.status === 'canceled') {
-                restoreBtn.classList.remove('hidden');
-                registerBtn.classList.add('hidden');
+    if (!calendar) {
+        // Only initialize the calendar if it doesn't exist
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: currentViewType, // Use stored view type
+            initialDate: currentViewDate, // Use stored date
+            navLinks: true, // Enable clickable dates
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+            timeZone: 'local',
+            slotMinTime: "08:00:00",
+            slotMaxTime: "18:00:00",
+            defaultTimedEventDuration: "00:30",
+            height: 'auto',
+            contentHeight: 'auto',
+            slotEventOverlap: false,
+            selectable: true,
+            events: events,
+            dayMaxEventRows: 5,
+            expandRows: false,
+            locale: 'ko',
+            allDaySlot: false,
+            eventMinHeight: 20,
+            nowIndicator: true,
+            editable: true,
+            eventDurationEditable: false,
+            eventResizableFromStart: true,
+            navLinkDayClick: function(date, jsEvent) {
+                currentViewDate = date; // Update the current view date
+                selectedDate = date; // Ensure selectedDate is updated
+                calendar.changeView('timeGridDay', currentViewDate); // Switch to day view
+            },
+            weekNumbers: true,
+            navLinkWeekClick: function(weekStart, jsEvent) {
+                currentViewDate = weekStart; // Update the current view date
+                selectedDate = weekStart; // Ensure selectedDate is updated
+                calendar.changeView('timeGridWeek', currentViewDate); // Switch to week view
+            },
+            select: function(info) {
+                selectedDate = info.start; // Set selected date on select
+                timeInput.value = info.startStr.substring(11, 16);
+                selectedEventId = null;
+                registerBtn.classList.remove('hidden');
                 updateBtn.classList.add('hidden');
-                deleteBtn.classList.add('hidden');
-                cancelBtn.classList.add('hidden');
-            } else {
-                restoreBtn.classList.add('hidden');
-                registerBtn.classList.add('hidden');
-                updateBtn.classList.remove('hidden');
-                deleteBtn.classList.remove('hidden');
-                cancelBtn.classList.remove('hidden');
-            }
-        },
-                eventDidMount: function(info) {
-            if (info.event.extendedProps.status === 'canceled') {
-                info.el.style.textDecoration = 'line-through';
-                info.el.style.textDecorationThickness = '3px';
-                info.el.style.color = 'gray';
-            }
-        },
-        eventDrop: async function(info) {
-            const eventObj = info.event;
-            selectedEventId = eventObj.id;
+            },
+            eventClick: function(info) {
+                const eventObj = info.event;
+                selectedEventId = eventObj.id;
+                selectedDate = eventObj.start; // Update selected date on event click
+                currentViewDate = eventObj.start; // Update view date
 
-            try {
-                await updateDoc(doc(db, 'appointments', selectedEventId), {
-                    start: eventObj.start,
+                const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
                 });
-            } catch (error) {
-                Swal.fire('Error', 'There was an issue moving the event.', 'error');
-                console.error('Error updating event:', error);
-                info.revert();
-            }
-        }
-    });
 
-    calendar.render();
+                timeInput.value = localStartTime;
+                patientNameInput.value = eventObj.extendedProps.patientName;
+                chartNumberInput.value = eventObj.extendedProps.chartNumber;
+                examTypeInput.value = eventObj.extendedProps.examType;
+                memoInput.value = eventObj.extendedProps.memo || '';
+
+                if (eventObj.extendedProps.status === 'canceled') {
+                    restoreBtn.classList.remove('hidden');
+                    registerBtn.classList.add('hidden');
+                    updateBtn.classList.add('hidden');
+                    deleteBtn.classList.add('hidden');
+                    cancelBtn.classList.add('hidden');
+                } else {
+                    restoreBtn.classList.add('hidden');
+                    registerBtn.classList.add('hidden');
+                    updateBtn.classList.remove('hidden');
+                    deleteBtn.classList.remove('hidden');
+                    cancelBtn.classList.remove('hidden');
+                }
+            },
+            eventDidMount: function(info) {
+                if (info.event.extendedProps.status === 'canceled') {
+                    info.el.style.textDecoration = 'line-through';
+                    info.el.style.textDecorationThickness = '3px';
+                    info.el.style.color = 'gray';
+                }
+            },
+            eventDrop: async function(info) {
+                const eventObj = info.event;
+                selectedEventId = eventObj.id;
+
+                try {
+                    await updateDoc(doc(db, 'appointments', selectedEventId), {
+                        start: eventObj.start,
+                    });
+                } catch (error) {
+                    Swal.fire('Error', 'There was an issue moving the event.', 'error');
+                    console.error('Error updating event:', error);
+                    info.revert();
+                }
+            },
+            viewDidMount: function() {
+                // Save current view type and date on view change
+                currentViewType = calendar.view.type;
+                currentViewDate = calendar.getDate();
+            }
+        });
+
+        calendar.render(); // Render the calendar
+    } else {
+        calendar.removeAllEvents(); // Clear existing events
+        calendar.addEventSource(events); // Add new events
+    }
+}
+
+function saveCurrentViewState() {
+    if (calendar) {
+        currentViewType = calendar.view.type;
+        currentViewDate = calendar.getDate();
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -177,6 +205,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 // Event listener for registration
 registerBtn.addEventListener('click', async () => {
+    saveCurrentViewState(); // Save view state
+
     const time = timeInput.value;
     const patientName = patientNameInput.value;
     const chartNumber = chartNumberInput.value;
@@ -203,19 +233,12 @@ registerBtn.addEventListener('click', async () => {
             memo
         });
 
-        // SweetAlert2 with auto-close
         Swal.fire({
             icon: 'success',
             title: 'Success',
             text: 'Appointment registered successfully.',
             showConfirmButton: false,
             timer: 1000,
-            showClass: {
-                popup: 'swal2-fade-in' // Use custom fade-in class
-            },
-            hideClass: {
-                popup: 'swal2-fade-out' // Use custom fade-out class
-            }
         }).then(async () => {
             const events = await fetchEvents();
             renderCalendar(events); // Refresh calendar without reloading
@@ -228,18 +251,14 @@ registerBtn.addEventListener('click', async () => {
             text: 'There was an issue registering the appointment.',
             showConfirmButton: false,
             timer: 1000,
-            showClass: {
-                popup: 'swal2-fade-in' // Use custom fade-in class
-            },
-            hideClass: {
-                popup: 'swal2-fade-out' // Use custom fade-out class
-            }
         });
     }
 });
 
 // Event listener for update
 updateBtn.addEventListener('click', async () => {
+    saveCurrentViewState(); // Save view state
+
     if (!selectedEventId) {
         Swal.fire('Error', 'Please select an appointment to update.', 'error');
         return;
@@ -281,6 +300,8 @@ updateBtn.addEventListener('click', async () => {
 
 // Event listeners for deletion and cancellation...
 deleteBtn.addEventListener('click', async () => {
+    saveCurrentViewState(); // Save view state
+
     if (selectedEventId) {
         try {
             await deleteDoc(doc(db, 'appointments', selectedEventId));
@@ -297,6 +318,8 @@ deleteBtn.addEventListener('click', async () => {
 });
 
 cancelBtn.addEventListener('click', async () => {
+    saveCurrentViewState(); // Save view state
+
     if (selectedEventId) {
         try {
             await updateDoc(doc(db, 'appointments', selectedEventId), {
@@ -315,6 +338,8 @@ cancelBtn.addEventListener('click', async () => {
 });
 
 restoreBtn.addEventListener('click', async () => {
+    saveCurrentViewState(); // Save view state
+
     if (selectedEventId) {
         try {
             await updateDoc(doc(db, 'appointments', selectedEventId), {
@@ -326,12 +351,6 @@ restoreBtn.addEventListener('click', async () => {
                 text: '검사 예약이 복구되었습니다.',
                 showConfirmButton: false,
                 timer: 1000,
-                showClass: {
-                    popup: 'swal2-fade-in'
-                },
-                hideClass: {
-                    popup: 'swal2-fade-out'
-                }
             }).then(async () => {
                 const events = await fetchEvents();
                 renderCalendar(events); // Refresh calendar without reloading
@@ -344,7 +363,6 @@ restoreBtn.addEventListener('click', async () => {
     }
 });
 
-
 // Authentication state listener
 onAuthStateChanged(auth, user => {
     if (user) {
@@ -353,4 +371,3 @@ onAuthStateChanged(auth, user => {
         window.location.href = 'login.html'; // Redirect to login if not authenticated
     }
 });
-
