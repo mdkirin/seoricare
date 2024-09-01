@@ -1,8 +1,10 @@
 // firebase.js
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
-import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
+
+// Firebase configuration
 const firebaseConfig = {
     apiKey: "AIzaSyBTQsXAD6TCv-RLTM-2_LOH8Q91jIurvHo",
     authDomain: "seoricare.firebaseapp.com",
@@ -12,6 +14,7 @@ const firebaseConfig = {
     appId: "1:725312668828:web:f4d6c038176ade87d09959"
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
@@ -34,5 +37,4 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-// Export the initialized Firebase services and functions
-export { db, auth, handleLogout, onAuthStateChanged };
+export { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc };

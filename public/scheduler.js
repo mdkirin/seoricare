@@ -1,5 +1,5 @@
 // scheduler.js
-import { db, handleLogout } from './firebase.js'; // Import Firebase services and logout function
+import { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from './firebase.js'; // Import Firebase services and logout function
 
 let calendar; // Declare calendar as a global variable
 let selectedEventId = null;
