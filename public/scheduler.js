@@ -3,7 +3,7 @@ import { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDo
 
 let calendar; // Declare calendar as a global variable
 let selectedEventId = null;
-let currentViewType = 'timeGridWeek'; // Default view type
+let currentViewType = 'dayGridMonth'; // Default view type
 let currentViewDate = new Date(); // Default to today's date
 let selectedDate = new Date(); // Default to today's date
 
@@ -35,7 +35,21 @@ flatpickr("#time", {
     defaultDate: timeInput.value // 현재 입력된 시간을 기본값으로 설정
 });
 
-
+function initializeFlatpickr() {
+    flatpickr("#time", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true,
+        minuteIncrement: 30,
+        defaultDate: timeInput.value || "09:00", // 초기값 설정
+        onOpen: function(selectedDates, dateStr, instance) {
+            // 타임피커가 열릴 때 기본값을 selectedDate로 설정
+            const defaultTime = selectedDate ? selectedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }) : "09:00";
+            instance.setDate(defaultTime, false); // 두 번째 인자를 false로 설정하여 onChange 트리거 방지
+        }
+    });
+}
 
 async function fetchEvents() {
     const events = [];
@@ -131,6 +145,9 @@ function renderCalendar(events) {
                 examTypeInput.value = eventObj.extendedProps.examType;
                 memoInput.value = eventObj.extendedProps.memo || '';
 
+                initializeFlatpickr();
+
+
                 if (eventObj.extendedProps.status === 'canceled') {
                     restoreBtn.classList.remove('hidden');
                     registerBtn.classList.add('hidden');
@@ -189,6 +206,7 @@ function saveCurrentViewState() {
 
 document.addEventListener('DOMContentLoaded', async function () {
     const events = await fetchEvents(); // Fetch events from Firestore
+    initializeFlatpickr();
     renderCalendar(events); // Render the calendar
 });
 
