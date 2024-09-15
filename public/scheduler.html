@@ -18,7 +18,7 @@
     <style>
         /* Active 버튼 스타일 */
         .btn-exam.active {
-            background-color: #4CAF50; /* 선택되었을 때 녹색 */
+            background-color: #6a4caf; /* 선택되었을 때 녹색 */
             color: white;
         }
         .btn-exam.disabled {
@@ -82,9 +82,9 @@
                         <button class="btn-exam w-full" data-value="colonScreen">대장암검진</button>
                         <button class="btn-exam w-full disabled" data-type="colonScreen-stage" disabled>1차</button>
                         <button class="btn-exam w-full disabled" data-type="colonScreen-prep" disabled>2L</button>
-                        <button class="btn-exam w-full disabled" data-type="colonScreen-received" disabled>미수령</button>
                         <button class="btn-exam w-full" data-value="liverScreen">간암검진</button>
                         <button class="btn-exam w-full disabled" data-type="liverScreen-deductible" disabled>0%</button>
+                        <button class="btn-exam w-full disabled" data-type="colonScreen-received" disabled>미수령</button>
                     </div>
                 </div>
 
@@ -134,6 +134,13 @@
     </div>
 
     <script>
+        // 토글 상태 로직
+        function toggleOptionsText(button, options) {
+            const currentText = button.textContent;
+            const nextIndex = (options.indexOf(currentText) + 1) % options.length;
+            button.textContent = options[nextIndex];
+        }
+
         // 건강검진 버튼 클릭 시 서브 옵션 활성화/비활성화
         document.addEventListener('DOMContentLoaded', function () {
             document.querySelector('button[data-value="healthCheckup"]').addEventListener('click', function() {
@@ -215,6 +222,52 @@
                 button.addEventListener('click', function() {
                     this.classList.toggle('active');
                 });
+            });
+
+            // 토글 로직 추가
+            document.querySelector('button[data-type="stomachScreen-deductible"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['0%', '10%']);
+            });
+
+            document.querySelector('button[data-type="stomachScreen-sedation"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['진정', '비진정']);
+            });
+
+            document.querySelector('button[data-type="colonScreen-stage"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['1차', '2차']);
+
+                // 2차로 토글되면 관련 버튼 활성화 및 active 상태 부여
+                const isSecondStage = this.textContent === '2차';
+                const relatedOptions = document.querySelectorAll('button[data-type="colonScreen-prep"], button[data-type="colonScreen-received"]');
+                relatedOptions.forEach(option => {
+                    option.disabled = !isSecondStage;
+                    option.classList.toggle('disabled', !isSecondStage);
+                    option.classList.toggle('active', isSecondStage);
+                });
+            });
+
+            document.querySelector('button[data-type="colonScreen-prep"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['2L', '오라팡', '수프렙']);
+            });
+
+            document.querySelector('button[data-type="colonScreen-received"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['미수령', '수령']);
+            });
+
+            document.querySelector('button[data-type="liverScreen-deductible"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['0%', '10%']);
+            });
+
+            document.querySelector('button[data-type="upperEndoscopy-sedation"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['진정', '비진정']);
+            });
+
+            document.querySelector('button[data-type="colonoscopy-prep"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['2L', '오라팡', '수프렙']);
+            });
+
+            document.querySelector('button[data-type="colonoscopy-received"]').addEventListener('click', function() {
+                toggleOptionsText(this, ['미수령', '수령']);
             });
         });
     </script>
