@@ -586,11 +586,11 @@ video {
 .btn-health-check, .btn-cancer-check, .btn-cancer-option, .btn-cancer-type {
   background-color: #f3f3f3;
   color: #333;
-  padding: 10px 15px;
+  padding: 8px 16px;
   border: 1px solid #ccc;
   border-radius: 4px;
   cursor: pointer;
-  margin: 5px;
+  margin: 4px;
 }
 
 .btn-health-check.active, .btn-cancer-check.active, .btn-cancer-option.active, .btn-cancer-type.active {
@@ -613,19 +613,33 @@ video {
   display: none;
 }
 
+.exam-section {
+  margin-bottom: 16px; /* Add some spacing below each section */
+  padding: 16px; /* Add padding inside the section */
+  border: 1px solid #ccc; /* Add border */
+  border-radius: 8px; /* Round the corners */
+  background-color: #f9f9f9; /* Slightly different background color */
+}
+
 .btn-exam {
   background-color: #e0e0e0;
   color: #333;
   border: 1px solid #ccc;
-  padding: 8px 16px;
+  padding: 8px 12px;
   margin: 4px;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .btn-exam.active {
-  background-color: #4A90E2;
-  color: white;
+  background-color: #4C51BF; /* Indigo */
+  color: #FFFFFF;
+}
+
+.btn-exam.disabled {
+  background-color: #e2e8f0; /* Gray background for disabled buttons */
+  color: #9ca3af; /* Lighter text color for disabled buttons */
+  cursor: not-allowed;
 }
 
 .btn-exam:hover {
@@ -646,10 +660,10 @@ video {
   background-color: #e0e0e0;
   color: #333;
   border: 1px solid #ccc;
-  padding: 5px 10px;
+  padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
-  margin: 2px;
+  margin: 4px;
 }
 
 .mdc-segmented-button__segment.active {

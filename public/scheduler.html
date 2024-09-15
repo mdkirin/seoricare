@@ -1,4 +1,3 @@
-<!-- scheduler.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,13 +9,24 @@
 
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
-    <link rel="stylesheet" href="../node_modules/flatpickr/dist/flatpickr.min.css">
-
-    <script src="../node_modules/flatpickr/dist/flatpickr.min.js"></script>
+    <script src="../node_modules/fullcalendar/index.global.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@material/web@0.30.0/dist/mdc.material.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@material/web@0.30.0/dist/mdc.material.min.js"></script>
+    <style>
+        /* Active 버튼 스타일 */
+        .btn-exam.active {
+            background-color: #4CAF50; /* 선택되었을 때 녹색 */
+            color: white;
+        }
+        .btn-exam.disabled {
+            background-color: #f0f0f0; /* 비활성화 상태 */
+            color: #a0a0a0;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
 
@@ -38,98 +48,79 @@
             <!-- Calendar Section -->
             <div class="col-span-3 bg-white shadow-md rounded p-4 h-full">
                 <div id="calendar" class="h-full"></div>
+                <label for="memo" class="block mt-4">메모:</label>
+                <textarea id="memo" name="memo" placeholder="추가 메모" class="border p-2 w-full mb-4"></textarea>
             </div>
 
             <!-- Registration Section -->
             <div class="registration-section bg-white shadow-md rounded p-4 h-full">
-                <div class="mb-4">
+                <div class="grid grid-cols-3 gap-2">
                     <input type="text" id="time" name="time" placeholder="예약 시각 선택" class="border p-2 w-full">
-                </div>
-                <div class="mb-4 grid grid-cols-2 gap-2">
                     <input type="text" id="patientName" name="patientName" placeholder="환자 이름" class="border p-2 w-full">
                     <input type="text" id="chartNumber" name="chartNumber" placeholder="차트 번호" class="border p-2 w-full">
                 </div>
 
-                <!-- 건강검진 항목 -->
-                <h3 class="cursor-pointer" onclick="toggleSection('healthCheckSection')">▼ 건강검진</h3>
-                <div id="healthCheckSection" class="mb-4 section hidden">
-                    <button class="btn-exam" data-value="lipidScreen">이상지질</button>
-                    <button class="btn-exam" data-value="lsmScreen">생활습관</button>
-                    <button class="btn-exam" data-value="elderScreen">노인신체</button>
-                    <button class="btn-exam" data-value="cognitionScreen">인지기능</button>
-                    <button class="btn-exam" data-value="depressionScreen">정신건강</button>
-                    <button class="btn-exam" data-value="hbvScreen">B형간염</button>
-                    <button class="btn-exam" data-value="bmdScreen">골밀도</button>
+                <!-- 검사 항목 버튼 -->
+                <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="btn-exam w-full" data-value="healthCheckup">건강검진</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="lipidScreen" disabled>이상지질</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="lsmScreen" disabled>생활습관</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="elderScreen" disabled>노인신체</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="cognitionScreen" disabled>인지기능</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="depressionScreen" disabled>정신건강</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="hbvScreen" disabled>B형간염</button>
+                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="bmdScreen" disabled>골밀도</button>
+                    </div>
                 </div>
 
-<!-- 암검진 항목 -->
-<h3 class="cursor-pointer" onclick="toggleSection('cancerCheckSection')">▼ 암검진</h3>
-<div id="cancerCheckSection" class="mb-4 section hidden">
-    <div class="flex items-center">
-        <button class="btn-exam" data-value="stomachScreen">위암</button>
-        <div class="sub-options hidden ml-2" data-type="stomachScreen">
-            <button class="btn-cancer-option" data-type="stomachScreen" data-value="deductible0%">0%</button>
-            <button class="btn-cancer-option" data-type="stomachScreen" data-value="deductible10%">10%</button>
-            <button class="btn-cancer-type" data-type="stomachScreen" data-value="nonsedation">비진정</button>
-            <button class="btn-cancer-type" data-type="stomachScreen" data-value="sedation">진정</button>
-        </div>
-    </div>
-
-    <div class="flex items-center">
-        <button class="btn-exam" data-value="colonScreen">대장암</button>
-        <div class="sub-options hidden ml-2" data-type="colonScreen">
-            <button class="btn-cancer-option" data-type="colonScreen" data-value="1st">1차</button>
-            <button class="btn-cancer-option" data-type="colonScreen" data-value="2nd">2차</button>
-        </div>
-    </div>
-
-    <div class="flex items-center">
-        <button class="btn-exam" data-value="liverScreen">간암</button>
-        <div class="sub-options hidden ml-2" data-type="liverScreen">
-            <button class="btn-cancer-option" data-type="liverScreen" data-value="deductible0%">0%</button>
-            <button class="btn-cancer-option" data-type="liverScreen" data-value="deductible10%">10%</button>
-        </div>
-    </div>
-</div>
-
-<!-- 내시경 항목 -->
-<h3 class="cursor-pointer" onclick="toggleSection('endoscopySection')">▼ 내시경</h3>
-<div id="endoscopySection" class="mb-4 section hidden">
-    <div class="flex items-center">
-        <button class="btn-exam" data-value="endoscopy">위</button>
-        <div class="sub-options flex ml-2" data-type="endoscopy">
-            <button class="btn-cancer-type" data-type="endoscopy" data-value="sedation">진정</button>
-            <button class="btn-cancer-type" data-type="endoscopy" data-value="nonsedation">비진정</button>
-        </div>
-    </div>
-    
-    <button class="btn-exam" data-value="colonoscopy">대장</button>
-</div>
-
-
-                <!-- 초음파 항목 -->
-                <h3 class="cursor-pointer" onclick="toggleSection('ultrasoundSection')">▼ 초음파</h3>
-                <div id="ultrasoundSection" class="mb-4 section hidden">
-                    <button class="btn-exam" data-value="abdUS">상복부</button>
-                    <button class="btn-exam" data-value="thyroidUS">갑상선</button>
-                    <button class="btn-exam" data-value="carotidUS">경동맥</button>
+                <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="btn-exam w-full" data-value="stomachScreen">위암검진</button>
+                        <button class="btn-exam w-full disabled" data-type="stomachScreen-deductible" disabled>0%</button>
+                        <button class="btn-exam w-full disabled" data-type="stomachScreen-sedation" disabled>진정</button>
+                        <button class="btn-exam w-full" data-value="colonScreen">대장암검진</button>
+                        <button class="btn-exam w-full disabled" data-type="colonScreen-stage" disabled>1차</button>
+                        <button class="btn-exam w-full disabled" data-type="colonScreen-prep" disabled>2L</button>
+                        <button class="btn-exam w-full disabled" data-type="colonScreen-received" disabled>미수령</button>
+                        <button class="btn-exam w-full" data-value="liverScreen">간암검진</button>
+                        <button class="btn-exam w-full disabled" data-type="liverScreen-deductible" disabled>0%</button>
+                    </div>
                 </div>
 
-                <!-- 기타검진 항목 -->
-                <h3 class="cursor-pointer" onclick="toggleSection('otherCheckSection')">▼ 기타검진</h3>
-                <div id="otherCheckSection" class="mb-4 section hidden">
-                    <button class="btn-exam" data-value="generalRecru">일반채용</button>
-                    <button class="btn-exam" data-value="civilRecru">공무원채용</button>
-                    <button class="btn-exam" data-value="TbScreen">단순결핵</button>
-                    <button class="btn-exam" data-value="latentTbScreen">잠복결핵</button>
-                    <button class="btn-exam" data-value="healthCert">보건증</button>
+                <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="btn-exam w-full" data-value="upperEndoscopy">위내시경</button>
+                        <button class="btn-exam w-full disabled" data-type="upperEndoscopy-sedation" disabled>진정</button>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="btn-exam w-full" data-value="colonoscopy">대장내시경</button>
+                        <button class="btn-exam w-full disabled" data-type="colonoscopy-prep" disabled>2L</button>
+                        <button class="btn-exam w-full disabled" data-type="colonoscopy-received" disabled>미수령</button>
+                    </div>
+                </div>
+                
+                <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="btn-exam w-full" data-value="abdUS">상복부초음파</button>
+                        <button class="btn-exam w-full" data-value="thyroidUS">갑상선초음파</button>
+                        <button class="btn-exam w-full" data-value="carotidUS">경동맥초음파</button>
+                    </div>
                 </div>
 
-                <!-- 메모 -->
-                <label for="memo" class="block">메모:</label>
-                <textarea id="memo" name="memo" placeholder="추가 메모" class="border p-2 w-full mb-4"></textarea>
-
-                <!-- 버튼들 -->
+                <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
+                    <div class="grid grid-cols-3 gap-2">
+                        <button class="btn-exam w-full" data-value="generalRecru">일반채용</button>
+                        <button class="btn-exam w-full" data-value="civilRecru">공무원채용</button>
+                        <button class="btn-exam w-full" data-value="tbScreen">단순결핵</button>
+                        <button class="btn-exam w-full" data-value="latentTbScreen">잠복결핵</button>
+                        <button class="btn-exam w-full" data-value="healthCert">보건증</button>
+                        <button class="btn-exam w-full" data-value="tbpe">TBPE</button>
+                        <button class="btn-exam w-full" data-value="urineProtein">요단백</button>
+                        <button class="btn-exam w-full" data-value="hba1c">당화혈색소</button>
+                        <button class="btn-exam w-full" data-value="bmdTest">골밀도검사</button>
+                    </div>
+                </div>
                 <div class="flex space-x-2">
                     <button id="registerBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">등록</button>
                     <button id="resetBtn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded">초기화</button>
@@ -142,14 +133,92 @@
         </div>
     </div>
 
+    <script>
+        // 건강검진 버튼 클릭 시 서브 옵션 활성화/비활성화
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelector('button[data-value="healthCheckup"]').addEventListener('click', function() {
+                const relatedOptions = document.querySelectorAll('button[data-type="healthCheckup-option"]');
+
+                // 버튼 자체의 active 상태 토글
+                this.classList.toggle('active');
+                
+                // 서브 옵션의 disabled 속성을 토글
+                relatedOptions.forEach(option => {
+                    if (option.disabled) {
+                        option.disabled = false;
+                        option.classList.remove('disabled');
+                    } else {
+                        option.disabled = true;
+                        option.classList.add('disabled');
+                        option.classList.remove('active'); // 비활성화 시 색상도 초기화
+                    }
+                });
+            });
+
+            // 서브 옵션 클릭 시 활성화 상태 토글
+            document.querySelectorAll('.btn-exam[data-type="healthCheckup-option"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    if (!button.disabled) {
+                        button.classList.toggle('active');
+                    }
+                });
+            });
+
+
+            // 위암검진, 대장암검진, 간암검진 버튼 클릭 시 활성화 상태 토글 및 서브 옵션 활성화
+            document.querySelector('button[data-value="stomachScreen"]').addEventListener('click', function() {
+                this.classList.toggle('active');
+                const relatedOptions = document.querySelectorAll('button[data-type="stomachScreen-deductible"], button[data-type="stomachScreen-sedation"]');
+                relatedOptions.forEach(option => {
+                    option.disabled = !this.classList.contains('active');
+                    option.classList.toggle('disabled', !this.classList.contains('active'));
+                    option.classList.toggle('active', this.classList.contains('active'));
+                });
+            });
+
+            document.querySelector('button[data-value="colonScreen"]').addEventListener('click', function() {
+                this.classList.toggle('active');
+                const relatedOption = document.querySelector('button[data-type="colonScreen-stage"]');
+                relatedOption.disabled = !this.classList.contains('active');
+                relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
+                relatedOption.classList.toggle('active', this.classList.contains('active'));
+            });
+
+            document.querySelector('button[data-value="liverScreen"]').addEventListener('click', function() {
+                this.classList.toggle('active');
+                const relatedOption = document.querySelector('button[data-type="liverScreen-deductible"]');
+                relatedOption.disabled = !this.classList.contains('active');
+                relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
+                relatedOption.classList.toggle('active', this.classList.contains('active'));
+            });
+
+            document.querySelector('button[data-value="upperEndoscopy"]').addEventListener('click', function() {
+                this.classList.toggle('active');
+                const relatedOption = document.querySelector('button[data-type="upperEndoscopy-sedation"]');
+                relatedOption.disabled = !this.classList.contains('active');
+                relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
+                relatedOption.classList.toggle('active', this.classList.contains('active'));
+            });
+
+            document.querySelector('button[data-value="colonoscopy"]').addEventListener('click', function() {
+                this.classList.toggle('active');
+                const relatedOptions = document.querySelectorAll('button[data-type="colonoscopy-prep"], button[data-type="colonoscopy-received"]');
+                relatedOptions.forEach(option => {
+                    option.disabled = !this.classList.contains('active');
+                    option.classList.toggle('disabled', !this.classList.contains('active'));
+                    option.classList.toggle('active', this.classList.contains('active'));
+                });
+            });
+
+            // 초음파 및 기타 검사 버튼 클릭 시 활성화 상태 토글
+            document.querySelectorAll('.btn-exam[data-value="abdUS"], .btn-exam[data-value="thyroidUS"], .btn-exam[data-value="carotidUS"], .btn-exam[data-value="generalRecru"], .btn-exam[data-value="civilRecru"], .btn-exam[data-value="tbScreen"], .btn-exam[data-value="latentTbScreen"], .btn-exam[data-value="healthCert"], .btn-exam[data-value="tbpe"], .btn-exam[data-value="urineProtein"], .btn-exam[data-value="hba1c"], .btn-exam[data-value="bmdTest"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+        });
+    </script>
     <!-- Import FullCalendar as modules -->
     <script type="module" src="./scheduler.js"></script>
-    <script>
-        function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            section.classList.toggle('hidden');
-        }
-    </script>
-
 </body>
 </html>
