@@ -77,8 +77,12 @@ async function fetchEvents() {
                 if (검사['위내시경'] && 검사['위내시경']['검진']) {
                     검사표시이름 += '위암검진 ';
                 }
-                // 대장내시경 관련 검사
-                if (검사['대장내시경'] && 검사['대장내시경']['검진'] && 검사['대장내시경']['차수'] === '2차') {
+                // 대장암검진 관련 검사
+                if (검사['대장암검진']) {
+                    검사표시이름 += `대장암검진 ${검사['대장암검진']['차수']} `;
+                }
+                // 대장내시경 관련 검사 (검진: true인 경우만)
+                if (검사['대장내시경'] && 검사['대장내시경']['검진'] === true) {
                     검사표시이름 += '대장암검진 2차 ';
                 }
                 // 상복부초음파 관련 검사
@@ -88,7 +92,7 @@ async function fetchEvents() {
 
                 // 기타 검사
                 for (let examName in 검사) {
-                    if (['위내시경', '대장내시경', '상복부초음파', '건강검진'].includes(examName)) continue;
+                    if (['위내시경', '대장암검진', '대장내시경', '상복부초음파', '건강검진'].includes(examName)) continue;
                     검사표시이름 += `${examName} `;
                 }
 
@@ -111,6 +115,7 @@ async function fetchEvents() {
     }
     return events;
 }
+
 
 // 캘린더 렌더링 함수
 function renderCalendar(events) {
@@ -228,47 +233,61 @@ async function handleEventClick(info) {
                 진정Option.textContent = 검사[examName]['진정'] ? '진정' : '비진정';
                 setButtonState(진정Option, true);
             }
-        }
+        } else if (examName === '대장내시경') {
+            if (검사[examName]['검진'] === true) {
+                // 대장내시경이 검진인 경우, 대장암검진 2차로 처리
+                const 대장암검진Button = document.querySelector('button[data-value="대장암검진"]');
+                대장암검진Button.classList.add('active');
+                const 차수Option = document.querySelector('button[data-type="대장암검진-차수"]');
+                const 장정결제Option = document.querySelector('button[data-type="대장암검진-장정결제"]');
+                const 장정결제수령Option = document.querySelector('button[data-type="대장암검진-장정결제수령"]');
 
-        if (examName === '대장내시경') {
+                setButtonState(차수Option, true);
+                차수Option.textContent = '2차';
+
+                // 장정결제 설정
+                if (검사[examName]['장정결제']) {
+                    장정결제Option.textContent = 검사[examName]['장정결제'];
+                    setButtonState(장정결제Option, true);
+                }
+
+                // 장정결제수령 설정
+                if (검사[examName]['장정결제수령'] !== undefined) {
+                    장정결제수령Option.textContent = 검사[examName]['장정결제수령'] ? '수령' : '미수령';
+                    setButtonState(장정결제수령Option, true);
+                }
+            } else {
+                // 대장내시경 버튼 활성화 (일반 대장내시경)
+                const 대장내시경Button = document.querySelector('button[data-value="대장내시경"]');
+                대장내시경Button.classList.add('active');
+                // 필요한 옵션이 있다면 여기에서 처리
+            }
+        } else if (examName === '대장암검진') {
+            // 대장암검진 1차 처리
             const 대장암검진Button = document.querySelector('button[data-value="대장암검진"]');
             대장암검진Button.classList.add('active');
             const 차수Option = document.querySelector('button[data-type="대장암검진-차수"]');
-            const 장정결제Option = document.querySelector('button[data-type="대장암검진-장정결제"]');
-            const 장정결제수령Option = document.querySelector('button[data-type="대장암검진-장정결제수령"]');
+            setButtonState(차수Option, true);
+            차수Option.textContent = 검사[examName]['차수'];
 
-            // 차수 설정
-            if (검사[examName]['차수']) {
-                차수Option.textContent = 검사[examName]['차수'];
-                setButtonState(차수Option, true);
+            // '1차'인 경우 추가 옵션 비활성화
+            if (검사[examName]['차수'] === '1차') {
+                const 장정결제Option = document.querySelector('button[data-type="대장암검진-장정결제"]');
+                const 장정결제수령Option = document.querySelector('button[data-type="대장암검진-장정결제수령"]');
+                setButtonState(장정결제Option, false);
+                setButtonState(장정결제수령Option, false);
             }
-
-            // 장정결제 설정
-            if (검사[examName]['장정결제']) {
-                장정결제Option.textContent = 검사[examName]['장정결제'];
-                setButtonState(장정결제Option, true);
-            }
-
-            // 장정결제수령 설정
-            if (검사[examName]['장정결제수령'] !== undefined) {
-                장정결제수령Option.textContent = 검사[examName]['장정결제수령'] ? '수령' : '미수령';
-                setButtonState(장정결제수령Option, true);
-            }
-        }
-
-        if (examName === '상복부초음파') {
+        } else if (examName === '상복부초음파') {
+            // 간암검진 버튼 활성화
             const 간암검진Button = document.querySelector('button[data-value="간암검진"]');
             간암검진Button.classList.add('active');
             const 본인부담금Option = document.querySelector('button[data-type="간암검진-본인부담금"]');
 
-            // 본인부담금 설정
             if (검사[examName]['본인부담금']) {
                 본인부담금Option.textContent = 검사[examName]['본인부담금'];
                 setButtonState(본인부담금Option, true);
             }
-        }
-
-        if (examName === '건강검진' && 검사[examName]['추가검진']) {
+        } else if (examName === '건강검진' && 검사[examName]['추가검진']) {
             const 건강검진Button = document.querySelector('button[data-value="건강검진"]');
             건강검진Button.classList.add('active');
 
@@ -280,10 +299,8 @@ async function handleEventClick(info) {
                     setButtonState(optionButton, true);
                 }
             }
-        }
-
-        // 기타 검사 처리
-        if (examName !== '위내시경' && examName !== '대장내시경' && examName !== '상복부초음파' && examName !== '건강검진') {
+        } else {
+            // 기타 검사 처리
             const mainButton = document.querySelector(`button[data-value='${examName}']`);
             if (mainButton) {
                 mainButton.classList.add('active');
@@ -318,7 +335,6 @@ function saveCurrentViewState() {
     }
 }
 
-// 검사 선택 함수
 function getSelectedExams() {
     const 검사 = {};
 
@@ -343,22 +359,27 @@ function getSelectedExams() {
             }
 
         } else if (examName === '대장암검진') {
-            // 대장암검진을 대장내시경으로 저장
             const 차수Option = document.querySelector('.btn-exam[data-type="대장암검진-차수"].active');
-            if (차수Option && 차수Option.textContent === '2차') {
-                검사['대장내시경'] = { '검진': true, '차수': '2차' };
+            if (차수Option) {
+                const 차수 = 차수Option.textContent;
+                if (차수 === '1차') {
+                    // '대장암검진'으로 저장
+                    검사['대장암검진'] = { '차수': 차수 };
+                } else if (차수 === '2차') {
+                    // '대장내시경'으로 저장
+                    검사['대장내시경'] = { '검진': true, '차수': 차수 };
 
-                const 장정결제Option = document.querySelector('.btn-exam[data-type="대장암검진-장정결제"].active');
-                if (장정결제Option) {
-                    검사['대장내시경']['장정결제'] = 장정결제Option.textContent;
-                }
+                    const 장정결제Option = document.querySelector('.btn-exam[data-type="대장암검진-장정결제"].active');
+                    if (장정결제Option) {
+                        검사['대장내시경']['장정결제'] = 장정결제Option.textContent;
+                    }
 
-                const 장정결제수령Option = document.querySelector('.btn-exam[data-type="대장암검진-장정결제수령"].active');
-                if (장정결제수령Option) {
-                    검사['대장내시경']['장정결제수령'] = 장정결제수령Option.textContent === '수령';
+                    const 장정결제수령Option = document.querySelector('.btn-exam[data-type="대장암검진-장정결제수령"].active');
+                    if (장정결제수령Option) {
+                        검사['대장내시경']['장정결제수령'] = 장정결제수령Option.textContent === '수령';
+                    }
                 }
             }
-
         } else if (examName === '간암검진') {
             // 간암검진을 상복부초음파로 저장
             검사['상복부초음파'] = {};
@@ -407,6 +428,7 @@ function getSelectedExams() {
 
     return 검사;
 }
+
 
 // 예약 등록 버튼 이벤트 리스너
 registerBtn.addEventListener('click', async () => {
