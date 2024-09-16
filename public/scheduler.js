@@ -301,19 +301,25 @@ async function handleEventClick(info) {
                 setButtonState(장정결제수령Option, false);
             }
         } else if (examName === '상복부초음파') {
-            // 간암검진 버튼 활성화
-            const 간암검진Button = document.querySelector('button[data-value="간암검진"]');
-            간암검진Button.classList.add('active');
-            const 본인부담금Option = document.querySelector('button[data-type="간암검진-본인부담금"]');
-
-            if (검사[examName]['본인부담금']) {
-                본인부담금Option.textContent = 검사[examName]['본인부담금'];
+            if (검사[examName]['검진'] === true) {
+                // 간암검진 버튼 활성화
+                const 간암검진Button = document.querySelector('button[data-value="간암검진"]');
+                간암검진Button.classList.add('active');
+                const 본인부담금Option = document.querySelector('button[data-type="간암검진-본인부담금"]');
                 setButtonState(본인부담금Option, true);
+        
+                if (검사[examName]['본인부담금']) {
+                    본인부담금Option.textContent = 검사[examName]['본인부담금'];
+                } else {
+                    // 본인부담금이 없을 경우 기본값 설정
+                    본인부담금Option.textContent = '10%';
+                }
             } else {
-                // 본인부담금이 없을 경우 기본값 설정
-                본인부담금Option.textContent = '0%';
-                setButtonState(본인부담금Option, true);
-            }
+                // 상복부초음파 버튼 활성화 (일반 상복부초음파)
+                const 상복부초음파Button = document.querySelector('button[data-value="상복부초음파"]');
+                상복부초음파Button.classList.add('active');
+                // 필요한 옵션이 있다면 여기에서 처리
+            }        
         } else if (examName === '건강검진' && 검사[examName]['추가검진']) {
             const 건강검진Button = document.querySelector('button[data-value="건강검진"]');
             건강검진Button.classList.add('active');
@@ -422,14 +428,14 @@ function getSelectedExams() {
             }
         } else if (examName === '간암검진') {
             // 간암검진을 상복부초음파로 저장
-            검사['상복부초음파'] = {};
+            검사['상복부초음파'] = { '검진': true };
 
             const 본인부담금Option = document.querySelector('.btn-exam[data-type="간암검진-본인부담금"].active');
             if (본인부담금Option) {
                 검사['상복부초음파']['본인부담금'] = 본인부담금Option.textContent;
             } else {
                 // 기본값 설정
-                검사['상복부초음파']['본인부담금'] = '10%';
+                검사['상복부초음파']['본인부담금'] = '0%';
             }
 
         } else if (examName === '건강검진') {
