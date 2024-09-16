@@ -15,7 +15,7 @@ const resetBtn = document.getElementById('resetBtn');
 const timeInput = document.getElementById('time');
 const 환자이름Input = document.getElementById('환자이름');
 const 차트번호Input = document.getElementById('차트번호');
-const memoInput = document.getElementById('memo');
+const 메모Input = document.getElementById('메모');
 const logoutBtn = document.getElementById('logoutBtn');
 
 if (logoutBtn) {
@@ -46,15 +46,37 @@ async function fetchEvents() {
         querySnapshot.forEach(doc => {
             const data = doc.data();
             if (data.start) {
+                let 검사표시이름 = '';
+                const 검사 = data.검사;
+
+                // 위내시경 관련 검사
+                if (검사['위내시경'] && 검사['위내시경']['검진']) {
+                    검사표시이름 += '위암검진 ';
+                }
+                // 대장내시경 관련 검사
+                if (검사['대장내시경'] && 검사['대장내시경']['검진'] && 검사['대장내시경']['차수'] === '2차') {
+                    검사표시이름 += '대장암검진 2차 ';
+                }
+                // 상복부초음파 관련 검사
+                if (검사['상복부초음파'] && 검사['상복부초음파']['검진']) {
+                    검사표시이름 += '간암검진 ';
+                }
+
+                // 기타 검사
+                for (let examName in 검사) {
+                    if (['위내시경', '대장내시경', '상복부초음파'].includes(examName)) continue;
+                    검사표시이름 += `${examName} `;
+                }
+
                 events.push({
                     id: doc.id,
-                    title: `${data.환자이름} (${formatExamType(JSON.parse(data.examType))})`, // Parsing JSON string to object
+                    title: `${data.환자이름} (${검사표시이름.trim()})`, // 검사표시이름 표시
                     start: data.start.toDate(),
                     extendedProps: {
                         차트번호: data.차트번호,
-                        memo: data.memo,
+                        메모: data.메모,
                         환자이름: data.환자이름,
-                        examType: JSON.parse(data.examType),
+                        검사: 검사, // 검사 객체 저장
                         status: data.status || 'active'
                     }
                 });
@@ -128,25 +150,129 @@ function renderCalendar(events) {
                 timeInput.value = localStartTime;
                 환자이름Input.value = eventObj.extendedProps.환자이름;
                 차트번호Input.value = eventObj.extendedProps.차트번호;
-                memoInput.value = eventObj.extendedProps.memo || '';
+                메모Input.value = eventObj.extendedProps.메모 || '';
 
-                const exams = eventObj.extendedProps.examType;
-                const formattedExams = formatExamType(exams);
-                const selectedExams = exams.exams.concat(
-                    Object.values(exams.subOptions).flat()
-                );
+                const 검사 = eventObj.extendedProps.검사;
 
+                // 모든 검사 버튼 초기화
                 document.querySelectorAll('.btn-exam').forEach(button => {
-                    button.classList.remove('active');
-                });
-
-                selectedExams.forEach(examType => {
-                    const button = document.querySelector(`.btn-exam[data-value='${examType}']`);
-                    if (button) {
-                        button.classList.add('active');
+                    if (button.dataset.type) {
+                        button.classList.remove('active');
+                        button.disabled = true;
+                        button.classList.add('disabled');
+                    } else {
+                        button.classList.remove('active');
                     }
                 });
 
+                // 검사 객체에 따라 버튼 활성화
+                for (let examName in 검사) {
+                    if (examName === '위내시경' && 검사[examName]['검진']) {
+                        // 위암검진 버튼 활성화
+                        const 위암검진Button = document.querySelector('button[data-value="위암검진"]');
+                        위암검진Button.classList.add('active');
+                        const 본인부담금Option = document.querySelector('button[data-type="위암검진-본인부담금"]');
+                        const 진정Option = document.querySelector('button[data-type="위암검진-진정"]');
+
+                        // 본인부담금 설정
+                        if (검사[examName]['본인부담금']) {
+                            본인부담금Option.textContent = 검사[examName]['본인부담금'];
+                            본인부담금Option.classList.add('active');
+                            본인부담금Option.disabled = false;
+                            본인부담금Option.classList.remove('disabled');
+                        }
+
+                        // 진정 설정
+                        if (검사[examName]['진정'] !== undefined) {
+                            if (검사[examName]['진정']) {
+                                진정Option.textContent = '진정';
+                            } else {
+                                진정Option.textContent = '비진정';
+                            }
+                            진정Option.classList.add('active');
+                            진정Option.disabled = false;
+                            진정Option.classList.remove('disabled');
+                        }
+                    }
+
+                    // 대장내시경 관련 검사 처리
+                    if (examName === '대장내시경' && 검사[examName]['검진']) {
+                        const 대장암검진Button = document.querySelector('button[data-value="대장암검진"]');
+                        대장암검진Button.classList.add('active');
+                        const 차수Option = document.querySelector('button[data-type="대장암검진-차수"]');
+                        const 장정결제Option = document.querySelector('button[data-type="대장암검진-장정결제"]');
+                        const 장정결제수령Option = document.querySelector('button[data-type="대장암검진-장정결제수령"]');
+
+                        // 차수 설정
+                        if (검사[examName]['차수']) {
+                            차수Option.textContent = 검사[examName]['차수'];
+                            차수Option.classList.add('active');
+                            차수Option.disabled = false;
+                            차수Option.classList.remove('disabled');
+                        }
+
+                        // 장정결제 설정
+                        if (검사[examName]['장정결제']) {
+                            장정결제Option.textContent = 검사[examName]['장정결제'];
+                            장정결제Option.classList.add('active');
+                            장정결제Option.disabled = false;
+                            장정결제Option.classList.remove('disabled');
+                        }
+
+                        // 장정결제수령 설정
+                        if (검사[examName]['장정결제수령'] !== undefined) {
+                            if (검사[examName]['장정결제수령']) {
+                                장정결제수령Option.textContent = '수령';
+                            } else {
+                                장정결제수령Option.textContent = '미수령';
+                            }
+                            장정결제수령Option.classList.add('active');
+                            장정결제수령Option.disabled = false;
+                            장정결제수령Option.classList.remove('disabled');
+                        }
+                    }
+
+                    // 상복부초음파 관련 검사 처리
+                    if (examName === '상복부초음파' && 검사[examName]['검진']) {
+                        const 간암검진Button = document.querySelector('button[data-value="간암검진"]');
+                        간암검진Button.classList.add('active');
+                        const 본인부담금Option = document.querySelector('button[data-type="간암검진-본인부담금"]');
+
+                        // 본인부담금 설정
+                        if (검사[examName]['본인부담금']) {
+                            본인부담금Option.textContent = 검사[examName]['본인부담금'];
+                            본인부담금Option.classList.add('active');
+                            본인부담금Option.disabled = false;
+                            본인부담금Option.classList.remove('disabled');
+                        }
+                    }
+
+                    // 건강검진 관련 검사 처리
+                    if (examName === '건강검진') {
+                        const 건강검진Button = document.querySelector('button[data-value="건강검진"]');
+                        건강검진Button.classList.add('active');
+                        const 건강검진Options = 검사[examName]['건강검진-옵션'];
+                        if (건강검진Options && Object.keys(건강검진Options).length > 0) {
+                            const 건강검진OptionButtons = document.querySelectorAll('button[data-type^="건강검진-옵션"]');
+                            건강검진OptionButtons.forEach(button => {
+                                const optionKey = button.getAttribute('data-type').split('-')[1];
+                                if (건강검진Options[optionKey]) {
+                                    button.classList.add('active');
+                                }
+                            });
+                        }
+                    }
+
+                    // 기타 검사 처리 (예: 노인신체, 인지기능, 정신건강 등)
+                    if (['노인신체', '인지기능', '정신건강'].includes(examName)) {
+                        const mainButton = document.querySelector(`button[data-value='${examName}']`);
+                        if (mainButton) {
+                            mainButton.classList.add('active');
+                        }
+                    }
+                }
+
+                // 예약 상태에 따라 버튼 표시
                 if (eventObj.extendedProps.status === 'canceled') {
                     restoreBtn.classList.remove('hidden');
                     registerBtn.classList.add('hidden');
@@ -160,6 +286,8 @@ function renderCalendar(events) {
                     deleteBtn.classList.remove('hidden');
                     cancelBtn.classList.remove('hidden');
                 }
+
+                updateButtonStates();
             },
             eventDidMount: function (info) {
                 if (info.event.extendedProps.status === 'canceled') {
@@ -190,10 +318,10 @@ registerBtn.addEventListener('click', async () => {
     const time = timeInput.value;
     const 환자이름 = 환자이름Input.value;
     const 차트번호 = 차트번호Input.value;
-    const exams = getSelectedExams();
-    const memo = memoInput.value;
+    const 검사 = getSelectedExams();
+    const 메모 = 메모Input.value;
 
-    if (!time || !환자이름 || !차트번호 || exams.length === 0) {
+    if (!time || !환자이름 || !차트번호 || Object.keys(검사).length === 0) {
         Swal.fire('오류', '필수 항목은 누락할 수 없습니다.', 'error');
         return;
     }
@@ -206,7 +334,7 @@ registerBtn.addEventListener('click', async () => {
 
     Swal.fire({
         title: '예약 등록 확인',
-        html: `<strong>예약 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${환자이름}<br><strong>차트 번호:</strong> ${차트번호}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
+        html: `<strong>예약 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${환자이름}<br><strong>차트 번호:</strong> ${차트번호}<br><strong>검사 종류:</strong> ${JSON.stringify(검사)}`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: '등록',
@@ -218,8 +346,8 @@ registerBtn.addEventListener('click', async () => {
                     start: utcDate,
                     환자이름,
                     차트번호,
-                    examType: exams, // Save as an object
-                    memo
+                    검사, // 객체로 저장
+                    메모
                 });
 
                 Swal.fire('등록완료', '검사 예약이 성공적으로 등록되었습니다.', 'success');
@@ -243,10 +371,10 @@ updateBtn.addEventListener('click', async () => {
     const time = timeInput.value;
     const 환자이름 = 환자이름Input.value;
     const 차트번호 = 차트번호Input.value;
-    const exams = getSelectedExams();
-    const memo = memoInput.value;
+    const 검사 = getSelectedExams();
+    const 메모 = 메모Input.value;
 
-    if (!time || !환자이름 || !차트번호 || exams.length === 0) {
+    if (!time || !환자이름 || !차트번호 || Object.keys(검사).length === 0) {
         Swal.fire('오류', '필수 항목은 누락할 수 없습니다.', 'error');
         return;
     }
@@ -259,7 +387,7 @@ updateBtn.addEventListener('click', async () => {
 
     Swal.fire({
         title: '예약 수정 확인',
-        html: `<strong>새 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${환자이름}<br><strong>차트 번호:</strong> ${차트번호}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
+        html: `<strong>새 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${환자이름}<br><strong>차트 번호:</strong> ${차트번호}<br><strong>검사 종류:</strong> ${JSON.stringify(검사)}`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: '수정',
@@ -271,8 +399,8 @@ updateBtn.addEventListener('click', async () => {
                     start: utcDate,
                     환자이름,
                     차트번호,
-                    examType: exams, // Save as an object
-                    memo
+                    검사, // 객체로 저장
+                    메모
                 });
                 Swal.fire('수정 완료', '예약 수정이 성공적으로 완료되었습니다.', 'success');
                 const events = await fetchEvents();
@@ -284,39 +412,109 @@ updateBtn.addEventListener('click', async () => {
     });
 });
 
-
 function getSelectedExams() {
-    const exams = [];
+    const 검사 = {};
 
-    // Collect main exams
+    // 주요 검사 버튼 활성화 상태 확인
     document.querySelectorAll('.btn-exam[data-value].active').forEach(button => {
         const examName = button.getAttribute('data-value');
-        const exam = {
-            name: examName,
-            options: []
-        };
 
-        // Collect sub-options for this main exam
-        document.querySelectorAll(`.btn-exam[data-type^="${examName}"].active`).forEach(subButton => {
-            exam.options.push(subButton.textContent);
-        });
+        if (examName === '위암검진') {
+            // 위암검진을 위내시경으로 저장
+            검사['위내시경'] = { 검진: true };
 
-        exams.push(exam);
+            // 본인부담금 수집
+            const 본인부담금Option = document.querySelector('.btn-exam[data-type="위암검진-본인부담금"].active');
+            if (본인부담금Option) {
+                검사['위내시경']['본인부담금'] = 본인부담금Option.textContent;
+            }
+
+            // 진정 여부 수집
+            const 진정Option = document.querySelector('.btn-exam[data-type="위암검진-진정"].active');
+            if (진정Option) {
+                검사['위내시경']['진정'] = 진정Option.textContent === '진정';
+            }
+
+        } else if (examName === '대장암검진') {
+            // 대장암검진을 대장내시경으로 저장
+            const 차수Option = document.querySelector('.btn-exam[data-type="대장암검진-차수"].active');
+            if (차수Option && 차수Option.textContent === '2차') {
+                검사['대장내시경'] = { 검진: true, 차수: '2차' };
+
+                const 장정결제Option = document.querySelector('.btn-exam[data-type="대장암검진-장정결제"].active');
+                if (장정결제Option) {
+                    검사['대장내시경']['장정결제'] = 장정결제Option.textContent;
+                }
+
+                const 장정결제수령Option = document.querySelector('.btn-exam[data-type="대장암검진-장정결제수령"].active');
+                if (장정결제수령Option) {
+                    검사['대장내시경']['장정결제수령'] = 장정결제수령Option.textContent === '수령';
+                }
+            }
+
+        } else if (examName === '간암검진') {
+            // 간암검진을 상복부초음파로 저장
+            검사['상복부초음파'] = { 검진: true };
+
+            const 본인부담금Option = document.querySelector('.btn-exam[data-type="간암검진-본인부담금"].active');
+            if (본인부담금Option) {
+                검사['상복부초음파']['본인부담금'] = 본인부담금Option.textContent;
+            }
+
+        } else if (examName === '건강검진') {
+            // 건강검진을 검사 객체에 추가하고 하부 옵션 수집
+            검사['건강검진'] = {};
+
+            const 건강검진Options = document.querySelectorAll('button[data-type="건강검진-옵션"].active');
+            건강검진Options.forEach(option => {
+                const optionKey = option.getAttribute('data-type').split('-')[1];
+                검사['건강검진'][optionKey] = true;
+            });
+
+        } else {
+            // 기타 검사
+            검사[examName] = {}; // 각 검사에 대해 객체 생성
+
+            // 하부 옵션 수집
+            document.querySelectorAll(`.btn-exam[data-type^="${examName}"].active`).forEach(subButton => {
+                const optionType = subButton.getAttribute('data-type').split('-')[1]; // 예: "진정"
+                const optionValue = subButton.textContent;
+
+                if (optionType === "검진") {
+                    // 검진 여부 저장
+                    검사[examName][optionType] = true;
+                } else if (optionType === "본인부담금") {
+                    // 본인부담금 저장
+                    검사[examName][optionType] = optionValue;
+                } else if (optionType === "추가검진") {
+                    // 추가검진은 배열로 저장
+                    if (!검사[examName][optionType]) {
+                        검사[examName][optionType] = [];
+                    }
+                    검사[examName][optionType].push(optionValue);
+                }
+            });
+        }
     });
 
-    return exams;
+    return 검사;
 }
 
 resetBtn.addEventListener('click', () => {
     timeInput.value = '';
     환자이름Input.value = '';
     차트번호Input.value = '';
-    memoInput.value = '';
+    메모Input.value = '';
     selectedEventId = null;
     selectedDate = new Date();
 
-    document.querySelectorAll('.active').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.sub-options').forEach(subOption => subOption.classList.add('hidden'));
+    document.querySelectorAll('.btn-exam').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.type) {
+            btn.disabled = true;
+            btn.classList.add('disabled');
+        }
+    });
 
     updateButtonStates();
 });
@@ -344,92 +542,39 @@ document.addEventListener('DOMContentLoaded', async function () {
     updateButtonStates();
 });
 
-// 검사 항목 축약형 매핑 (한글로 변경)
-const examTypeMap = {
-    '건강검진': '검진',
-    '이상지질': '지질',
-    '생활습관': '생활',
-    '노인신체': '노인',
-    '인지기능': '인지',
-    '정신건강': '정신',
-    'B형간염': 'HBV',
-    '골밀도': 'BMD',
-    '위암검진': '위',
-    '대장암검진': '대장암',
-    '위내시경': 'EGD',
-    '대장내시경': 'CFS',
-    '간암검진': '간암',
-    '상복부초음파': '복',
-    '갑상선초음파': '갑',
-    '경동맥초음파': '경',
-    '일반채용': '일채',
-    '공무원채용': '공채',
-    '단순결핵': '단결',
-    '잠복결핵': '잠결',
-    '보건증': '보건',
-    'TBPE': 'TBPE',
-    '요단백': '요단',
-    '당화혈색소': '당화',
-    '골밀도검사': 'BMD검사',
-    '0%': '0',
-    '10%': '10',
-    '진정': '(수)',
-    '비진정': '(비수)',
-    '1차': '1차',
-    '2차': '2차',
-    '2L': '2L',
-    '오라팡': '오라팡',
-    '수프렙': '수프렙',
-    '미수령': '미수',
-    '수령': '수령'
-};
-
-// 검사 항목을 축약형으로 변환하고 정렬하는 함수
-function formatExamType(examTypeObject) {
-    // 주요 검사 항목을 축약형으로 변환
-    const exams = examTypeObject.exams.map(type => examTypeMap[type] || type);
-
-    // 하위 옵션들을 축약형으로 변환
-    let subExams = [];
-    for (let key in examTypeObject.subOptions) {
-        const subOptions = examTypeObject.subOptions[key];
-        subOptions.forEach(option => {
-            const combinedKey = `${key}${option}`; // 예: 'stomachScreen0%'
-            subExams.push(examTypeMap[option] || option); // Using option directly
-        });
-    }
-
-    // 모든 검사 항목을 하나의 배열로 결합
-    const allExams = exams.concat(subExams);
-
-    // 우선순위에 따라 검사 항목을 정렬
-    const priorityOrder = [
-        '위', '0%', '10%', '(수)', '(비수)', // 위암검진 관련 항목 우선
-        'CFS', '대장암', '1차', '2차',       // 대장암 검진 및 내시경 관련 항목
-        '간암', '0', '10',                     // 간암 관련 항목
-        '지질', '생활', '노인', '인지', '정신', // 기타 검진 항목
-        'BMD', 'HBV', '복', '갑', '경'       // 기타 초음파 및 검사 항목
-    ];
-
-    allExams.sort((a, b) => {
-        const indexA = priorityOrder.indexOf(a);
-        const indexB = priorityOrder.indexOf(b);
-        return (indexA !== -1 ? indexA : priorityOrder.length) - (indexB !== -1 ? indexB : priorityOrder.length);
-    });
-
-    return allExams.join(' ');
-}
-
 // 검사 버튼 로직
 document.addEventListener('DOMContentLoaded', function () {
-    // 건강검진 버튼 클릭 시 서브 옵션 활성화/비활성화
-    document.querySelector('button[data-value="건강검진"]').addEventListener('click', function() {
-        const relatedOptions = document.querySelectorAll('button[data-type="건강검진-옵션"]');
+    // 공통 토글 함수
+    function toggleButtonState(button, options) {
+        button.classList.toggle('active');
+        if (button.classList.contains('active')) {
+            options.forEach(opt => {
+                opt.disabled = false;
+                opt.classList.add('active');
+                opt.classList.remove('disabled');
+            });
+        } else {
+            options.forEach(opt => {
+                opt.disabled = true;
+                opt.classList.remove('active');
+                opt.classList.add('disabled');
+                
+            });
+        }
+    }
 
-        // 버튼 자체의 active 상태 토글
-        this.classList.toggle('active');
-        
-        // 서브 옵션의 disabled 속성을 토글
+    // 공통 토글 함수 외부로 분리 (재사용성 높임)
+    function toggleOptionsText(button, options) {
+        const currentText = button.textContent;
+        const nextIndex = (options.indexOf(currentText) + 1) % options.length;
+        button.textContent = options[nextIndex];
+    }
+
+    // "건강검진" 버튼 클릭 시 하부 옵션 활성화만 하고 'active' 상태는 변경하지 않음
+    document.querySelector('button[data-value="건강검진"]').addEventListener('click', function() {
+        const 건강검진Button = document.querySelector('button[data-value="건강검진"]');
+        건강검진Button.classList.toggle('active');
+        const relatedOptions = document.querySelectorAll('button[data-type="건강검진-옵션"]');
         relatedOptions.forEach(option => {
             if (option.disabled) {
                 option.disabled = false;
@@ -442,7 +587,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 서브 옵션 클릭 시 활성화 상태 토글
+    // "건강검진" 서브 옵션 클릭 시 활성화 상태 토글
     document.querySelectorAll('.btn-exam[data-type="건강검진-옵션"]').forEach(button => {
         button.addEventListener('click', function() {
             if (!button.disabled) {
@@ -451,107 +596,120 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // 위암검진, 대장암검진, 간암검진 버튼 클릭 시 활성화 상태 토글 및 서브 옵션 활성화
+    // 위암검진 
     document.querySelector('button[data-value="위암검진"]').addEventListener('click', function() {
-        this.classList.toggle('active');
-        const relatedOptions = document.querySelectorAll('button[data-type="위암검진-본인부담금"], button[data-type="위암검진-진정"]');
-        relatedOptions.forEach(option => {
-            option.disabled = !this.classList.contains('active');
-            option.classList.toggle('disabled', !this.classList.contains('active'));
-            option.classList.toggle('active', this.classList.contains('active'));
-        });
+        const 본인부담금Option = document.querySelector('button[data-type="위암검진-본인부담금"]');
+        const 진정Option = document.querySelector('button[data-type="위암검진-진정"]');
+        toggleButtonState(this, [본인부담금Option, 진정Option]);
     });
-
-    document.querySelector('button[data-value="대장암검진"]').addEventListener('click', function() {
-        this.classList.toggle('active');
-        const relatedOption = document.querySelector('button[data-type="대장암검진-차수"]');
-        relatedOption.disabled = !this.classList.contains('active');
-        relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
-        relatedOption.classList.toggle('active', this.classList.contains('active'));
-    });
-
-    document.querySelector('button[data-value="간암검진"]').addEventListener('click', function() {
-        this.classList.toggle('active');
-        const relatedOption = document.querySelector('button[data-type="간암검진-본인부담금"]');
-        relatedOption.disabled = !this.classList.contains('active');
-        relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
-        relatedOption.classList.toggle('active', this.classList.contains('active'));
-    });
-
-    document.querySelector('button[data-value="위내시경"]').addEventListener('click', function() {
-        this.classList.toggle('active');
-        const relatedOption = document.querySelector('button[data-type="위내시경-진정"]');
-        relatedOption.disabled = !this.classList.contains('active');
-        relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
-        relatedOption.classList.toggle('active', this.classList.contains('active'));
-    });
-
-    document.querySelector('button[data-value="대장내시경"]').addEventListener('click', function() {
-        this.classList.toggle('active');
-        const relatedOptions = document.querySelectorAll('button[data-type="대장내시경-장정결제"], button[data-type="대장내시경-장정결제수령"]');
-        relatedOptions.forEach(option => {
-            option.disabled = !this.classList.contains('active');
-            option.classList.toggle('disabled', !this.classList.contains('active'));
-            option.classList.toggle('active', this.classList.contains('active'));
-        });
-    });
-
-    // 초음파 및 기타 검사 버튼 클릭 시 활성화 상태 토글
-    document.querySelectorAll('.btn-exam[data-value="상복부초음파"], .btn-exam[data-value="갑상선초음파"], .btn-exam[data-value="경동맥초음파"], .btn-exam[data-value="일반채용"], .btn-exam[data-value="공무원채용"], .btn-exam[data-value="단순결핵"], .btn-exam[data-value="잠복결핵"], .btn-exam[data-value="보건증"], .btn-exam[data-value="TBPE"], .btn-exam[data-value="요단백"], .btn-exam[data-value="당화혈색소"], .btn-exam[data-value="골밀도검사"]').forEach(button => {
-        button.addEventListener('click', function() {
-            this.classList.toggle('active');
-        });
-    });
-
-    // 토글 로직 추가
+    // 위암검진-본인부담금
     document.querySelector('button[data-type="위암검진-본인부담금"]').addEventListener('click', function() {
         toggleOptionsText(this, ['0%', '10%']);
     });
-
+    // 위암검진-진정
     document.querySelector('button[data-type="위암검진-진정"]').addEventListener('click', function() {
         toggleOptionsText(this, ['진정', '비진정']);
     });
 
-    document.querySelector('button[data-type="대장암검진-차수"]').addEventListener('click', function() {
-        toggleOptionsText(this, ['1차', '2차']);
-
-        // 2차로 토글되면 관련 버튼 활성화 및 active 상태 부여
-        const isSecondStage = this.textContent === '2차';
-        const relatedOptions = document.querySelectorAll('button[data-type="대장암검진-장정결제"], button[data-type="대장암검진-장정결제수령"]');
-        relatedOptions.forEach(option => {
-            option.disabled = !isSecondStage;
-            option.classList.toggle('disabled', !isSecondStage);
-            option.classList.toggle('active', isSecondStage);
-        });
+    // 대장암검진 
+    document.querySelector('button[data-value="대장암검진"]').addEventListener('click', function() {
+        const 차수Option = document.querySelector('button[data-type="대장암검진-차수"]');
+        const isSecondStage = 차수Option.textContent === '2차';
+        const 대장암검진Button = document.querySelector('button[data-value="대장암검진"]');
+        const 장정결제Option = document.querySelector('button[data-type="대장암검진-장정결제"]');
+        const 장정결제수령Option = document.querySelector('button[data-type="대장암검진-장정결제수령"]');
+        toggleButtonState(this, [차수Option]);
+        if  (대장암검진Button.classList.contains('active')) {
+            if (isSecondStage) {
+                장정결제Option.disabled = false;
+                장정결제Option.classList.remove('disabled');
+                장정결제Option.classList.add('active');
+                장정결제수령Option.disabled = false;
+                장정결제수령Option.classList.remove('disabled');
+                장정결제수령Option.classList.add('active');
+            }
+        } else {
+            장정결제Option.disabled = true;
+            장정결제Option.classList.add('disabled');
+            장정결제Option.classList.remove('active');
+            장정결제수령Option.disabled = true;
+            장정결제수령Option.classList.add('disabled');
+            장정결제수령Option.classList.remove('active');
+        }
     });
 
+    // 대장암검진-차수 
+    document.querySelector('button[data-type="대장암검진-차수"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['1차', '2차']);
+        const isSecondStage = this.textContent === '2차';
+        const 장정결제Option = document.querySelector('button[data-type="대장암검진-장정결제"]');
+        const 장정결제수령Option = document.querySelector('button[data-type="대장암검진-장정결제수령"]');
+        
+            if (isSecondStage) {
+                장정결제Option.disabled = false;
+                장정결제Option.classList.remove('disabled');
+                장정결제Option.classList.add('active');
+                장정결제수령Option.disabled = false;
+                장정결제수령Option.classList.remove('disabled');
+                장정결제수령Option.classList.add('active');
+            } else {
+                장정결제Option.disabled = true;
+                장정결제Option.classList.add('disabled');
+                장정결제Option.classList.remove('active');
+                장정결제수령Option.disabled = true;
+                장정결제수령Option.classList.add('disabled');
+                장정결제수령Option.classList.remove('active');
+            }
+       
+    }); 
+
+    // 대장암검진-장정결제 
     document.querySelector('button[data-type="대장암검진-장정결제"]').addEventListener('click', function() {
         toggleOptionsText(this, ['2L', '오라팡', '수프렙']);
     });
 
+    // 대장암검진-장정결제수령 
     document.querySelector('button[data-type="대장암검진-장정결제수령"]').addEventListener('click', function() {
         toggleOptionsText(this, ['미수령', '수령']);
     });
 
+    // 간암검진
+    document.querySelector('button[data-value="간암검진"]').addEventListener('click', function() {
+        const 본인부담금Option = document.querySelector('button[data-type="간암검진-본인부담금"]');
+        toggleButtonState(this, [본인부담금Option]);
+    });
+    // 간암검진-본인부담금
     document.querySelector('button[data-type="간암검진-본인부담금"]').addEventListener('click', function() {
         toggleOptionsText(this, ['0%', '10%']);
     });
-
+    // 위내시경 버튼 클릭 시
+    document.querySelector('button[data-value="위내시경"]').addEventListener('click', function() {
+        const relatedOptions = document.querySelectorAll('button[data-type="위내시경-진정"]');
+        toggleButtonState(this, Array.from(relatedOptions));
+    });
+    // 위암검진-진정
     document.querySelector('button[data-type="위내시경-진정"]').addEventListener('click', function() {
         toggleOptionsText(this, ['진정', '비진정']);
     });
 
+    // 대장내시경
+    document.querySelector('button[data-value="대장내시경"]').addEventListener('click', function() {
+        const relatedOptions = document.querySelectorAll('button[data-type="대장내시경-장정결제"], button[data-type="대장내시경-장정결제수령"]');
+        toggleButtonState(this, Array.from(relatedOptions));
+    });
+    // 대장내시경-장정결제
     document.querySelector('button[data-type="대장내시경-장정결제"]').addEventListener('click', function() {
         toggleOptionsText(this, ['2L', '오라팡', '수프렙']);
     });
-
+    // 대장내시경-장정결제수령
     document.querySelector('button[data-type="대장내시경-장정결제수령"]').addEventListener('click', function() {
         toggleOptionsText(this, ['미수령', '수령']);
     });
-});
-
-function toggleOptionsText(button, options) {
-    const currentText = button.textContent;
-    const nextIndex = (options.indexOf(currentText) + 1) % options.length;
-    button.textContent = options[nextIndex];
-}
+    // 기타 검사 버튼 클릭 시 활성화 상태 토글
+    document.querySelectorAll('.btn-exam[data-value="상복부초음파"], .btn-exam[data-value="갑상선초음파"], .btn-exam[data-value="경동맥초음파"], .btn-exam[data-value="일반채용"], .btn-exam[data-value="공무원채용"], .btn-exam[data-value="단순결핵"], .btn-exam[data-value="잠복결핵"], .btn-exam[data-value="보건증"], .btn-exam[data-value="TBPE"], .btn-exam[data-value="요단백"], .btn-exam[data-value="당화혈색소"], .btn-exam[data-value="골밀도검사"]').forEach(button => {
+        button.addEventListener('click', function() {
+            this.classList.toggle('active');
+            updateButtonStates();
+        });
+    });
+})
