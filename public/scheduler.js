@@ -132,7 +132,7 @@ function renderCalendar(events) {
 
                 const exams = eventObj.extendedProps.examType;
                 const formattedExams = formatExamType(exams);
-                const selectedExams = exams.mainExams.concat(
+                const selectedExams = exams.exams.concat(
                     Object.values(exams.subOptions).flat()
                 );
 
@@ -193,8 +193,8 @@ registerBtn.addEventListener('click', async () => {
     const exams = getSelectedExams();
     const memo = memoInput.value;
 
-    if (!time || !환자이름 || !차트번호 || exams.mainExams.length === 0) {
-        Swal.fire('Error', 'Please fill in all required fields.', 'error');
+    if (!time || !환자이름 || !차트번호 || exams.length === 0) {
+        Swal.fire('오류', '필수 항목은 누락할 수 없습니다.', 'error');
         return;
     }
 
@@ -218,15 +218,15 @@ registerBtn.addEventListener('click', async () => {
                     start: utcDate,
                     환자이름,
                     차트번호,
-                    examType: JSON.stringify(exams), // Save as JSON string
+                    examType: exams, // Save as an object
                     memo
                 });
 
-                Swal.fire('Success', 'Appointment registered successfully.', 'success');
+                Swal.fire('등록완료', '검사 예약이 성공적으로 등록되었습니다.', 'success');
                 const events = await fetchEvents();
                 renderCalendar(events);
             } catch (error) {
-                Swal.fire('Error', 'There was an issue registering the appointment.', 'error');
+                Swal.fire('오류', '검사 예약을 등록하는 과정에 문제가 있습니다.', 'error');
             }
         }
     });
@@ -236,7 +236,7 @@ updateBtn.addEventListener('click', async () => {
     saveCurrentViewState();
 
     if (!selectedEventId) {
-        Swal.fire('Error', 'Please select an appointment to update.', 'error');
+        Swal.fire('오류', '수정할 검사를 선택하세요.', 'error');
         return;
     }
 
@@ -246,8 +246,8 @@ updateBtn.addEventListener('click', async () => {
     const exams = getSelectedExams();
     const memo = memoInput.value;
 
-    if (!time || !환자이름 || !차트번호 || exams.mainExams.length === 0) {
-        Swal.fire('Error', 'Please fill in all required fields.', 'error');
+    if (!time || !환자이름 || !차트번호 || exams.length === 0) {
+        Swal.fire('오류', '필수 항목은 누락할 수 없습니다.', 'error');
         return;
     }
 
@@ -271,39 +271,37 @@ updateBtn.addEventListener('click', async () => {
                     start: utcDate,
                     환자이름,
                     차트번호,
-                    examType: JSON.stringify(exams), // Save as JSON string
+                    examType: exams, // Save as an object
                     memo
                 });
-                Swal.fire('Success', 'Appointment updated successfully.', 'success');
+                Swal.fire('수정 완료', '예약 수정이 성공적으로 완료되었습니다.', 'success');
                 const events = await fetchEvents();
                 renderCalendar(events);
             } catch (error) {
-                Swal.fire('Error', 'There was an issue updating the appointment.', 'error');
+                Swal.fire('수정 실패', '예약 수정 과정에 문제가 있습니다.', 'error');
             }
         }
     });
 });
 
+
 function getSelectedExams() {
-    const exams = {
-        mainExams: [],
-        subOptions: {}
-    };
+    const exams = [];
 
     // Collect main exams
     document.querySelectorAll('.btn-exam[data-value].active').forEach(button => {
-        exams.mainExams.push(button.getAttribute('data-value'));
-    });
+        const examName = button.getAttribute('data-value');
+        const exam = {
+            name: examName,
+            options: []
+        };
 
-    // Collect sub-options
-    document.querySelectorAll('.btn-exam[data-type].active').forEach(button => {
-        const type = button.getAttribute('data-type');
-        const value = button.textContent;
+        // Collect sub-options for this main exam
+        document.querySelectorAll(`.btn-exam[data-type^="${examName}"].active`).forEach(subButton => {
+            exam.options.push(subButton.textContent);
+        });
 
-        if (!exams.subOptions[type]) {
-            exams.subOptions[type] = [];
-        }
-        exams.subOptions[type].push(value);
+        exams.push(exam);
     });
 
     return exams;
@@ -389,7 +387,7 @@ const examTypeMap = {
 // 검사 항목을 축약형으로 변환하고 정렬하는 함수
 function formatExamType(examTypeObject) {
     // 주요 검사 항목을 축약형으로 변환
-    const mainExams = examTypeObject.mainExams.map(type => examTypeMap[type] || type);
+    const exams = examTypeObject.exams.map(type => examTypeMap[type] || type);
 
     // 하위 옵션들을 축약형으로 변환
     let subExams = [];
@@ -402,7 +400,7 @@ function formatExamType(examTypeObject) {
     }
 
     // 모든 검사 항목을 하나의 배열로 결합
-    const allExams = mainExams.concat(subExams);
+    const allExams = exams.concat(subExams);
 
     // 우선순위에 따라 검사 항목을 정렬
     const priorityOrder = [
