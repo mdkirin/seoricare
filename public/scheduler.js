@@ -13,8 +13,8 @@ const cancelBtn = document.getElementById('cancelBtn');
 const restoreBtn = document.getElementById('restoreBtn');
 const resetBtn = document.getElementById('resetBtn');
 const timeInput = document.getElementById('time');
-const patientNameInput = document.getElementById('patientName');
-const chartNumberInput = document.getElementById('chartNumber');
+const 환자이름Input = document.getElementById('환자이름');
+const 차트번호Input = document.getElementById('차트번호');
 const memoInput = document.getElementById('memo');
 const logoutBtn = document.getElementById('logoutBtn');
 
@@ -48,13 +48,13 @@ async function fetchEvents() {
             if (data.start) {
                 events.push({
                     id: doc.id,
-                    title: `${data.patientName} (${formatExamType(data.examType)})`,
+                    title: `${data.환자이름} (${formatExamType(JSON.parse(data.examType))})`, // Parsing JSON string to object
                     start: data.start.toDate(),
                     extendedProps: {
-                        chartNumber: data.chartNumber,
+                        차트번호: data.차트번호,
                         memo: data.memo,
-                        patientName: data.patientName,
-                        examType: data.examType,
+                        환자이름: data.환자이름,
+                        examType: JSON.parse(data.examType),
                         status: data.status || 'active'
                     }
                 });
@@ -126,8 +126,8 @@ function renderCalendar(events) {
                 });
 
                 timeInput.value = localStartTime;
-                patientNameInput.value = eventObj.extendedProps.patientName;
-                chartNumberInput.value = eventObj.extendedProps.chartNumber;
+                환자이름Input.value = eventObj.extendedProps.환자이름;
+                차트번호Input.value = eventObj.extendedProps.차트번호;
                 memoInput.value = eventObj.extendedProps.memo || '';
 
                 const exams = eventObj.extendedProps.examType;
@@ -188,12 +188,12 @@ registerBtn.addEventListener('click', async () => {
     saveCurrentViewState();
 
     const time = timeInput.value;
-    const patientName = patientNameInput.value;
-    const chartNumber = chartNumberInput.value;
+    const 환자이름 = 환자이름Input.value;
+    const 차트번호 = 차트번호Input.value;
     const exams = getSelectedExams();
     const memo = memoInput.value;
 
-    if (!time || !patientName || !chartNumber || exams.mainExams.length === 0) {
+    if (!time || !환자이름 || !차트번호 || exams.mainExams.length === 0) {
         Swal.fire('Error', 'Please fill in all required fields.', 'error');
         return;
     }
@@ -206,7 +206,7 @@ registerBtn.addEventListener('click', async () => {
 
     Swal.fire({
         title: '예약 등록 확인',
-        html: `<strong>예약 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${patientName}<br><strong>차트 번호:</strong> ${chartNumber}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
+        html: `<strong>예약 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${환자이름}<br><strong>차트 번호:</strong> ${차트번호}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: '등록',
@@ -216,8 +216,8 @@ registerBtn.addEventListener('click', async () => {
             try {
                 await addDoc(collection(db, 'appointments'), {
                     start: utcDate,
-                    patientName,
-                    chartNumber,
+                    환자이름,
+                    차트번호,
                     examType: JSON.stringify(exams), // Save as JSON string
                     memo
                 });
@@ -241,12 +241,12 @@ updateBtn.addEventListener('click', async () => {
     }
 
     const time = timeInput.value;
-    const patientName = patientNameInput.value;
-    const chartNumber = chartNumberInput.value;
+    const 환자이름 = 환자이름Input.value;
+    const 차트번호 = 차트번호Input.value;
     const exams = getSelectedExams();
     const memo = memoInput.value;
 
-    if (!time || !patientName || !chartNumber || exams.mainExams.length === 0) {
+    if (!time || !환자이름 || !차트번호 || exams.mainExams.length === 0) {
         Swal.fire('Error', 'Please fill in all required fields.', 'error');
         return;
     }
@@ -259,7 +259,7 @@ updateBtn.addEventListener('click', async () => {
 
     Swal.fire({
         title: '예약 수정 확인',
-        html: `<strong>새 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${patientName}<br><strong>차트 번호:</strong> ${chartNumber}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
+        html: `<strong>새 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${환자이름}<br><strong>차트 번호:</strong> ${차트번호}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: '수정',
@@ -269,8 +269,8 @@ updateBtn.addEventListener('click', async () => {
             try {
                 await updateDoc(doc(db, 'appointments', selectedEventId), {
                     start: utcDate,
-                    patientName,
-                    chartNumber,
+                    환자이름,
+                    차트번호,
                     examType: JSON.stringify(exams), // Save as JSON string
                     memo
                 });
@@ -309,11 +309,10 @@ function getSelectedExams() {
     return exams;
 }
 
-
 resetBtn.addEventListener('click', () => {
     timeInput.value = '';
-    patientNameInput.value = '';
-    chartNumberInput.value = '';
+    환자이름Input.value = '';
+    차트번호Input.value = '';
     memoInput.value = '';
     selectedEventId = null;
     selectedDate = new Date();
@@ -347,31 +346,44 @@ document.addEventListener('DOMContentLoaded', async function () {
     updateButtonStates();
 });
 
-// 검사 항목 축약형 매핑
+// 검사 항목 축약형 매핑 (한글로 변경)
 const examTypeMap = {
-    'stomachScreen': '위',
-    'stomachScreendeductible0%': '0%',
-    'stomachScreendeductible10%': '10%',
-    'stomachScreensedation': '(수)',
-    'stomachScreennonsedation': '(비수)',
-    'colonScreen': '대장암',
-    'colonScreen1st': '1차',
-    'colonScreen2nd': '2차',
-    'colonoscopy': 'CFS',
-    'liverScreen': '간암',
-    'liverScreendeductible0%': '0',
-    'liverScreendeductible10%': '10',
-    'endoscopy': 'EGD',
-    'lipidScreen': '지질',
-    'lsmScreen': '생활',
-    'elderScreen': '노인',
-    'cognitionScreen': '인지',
-    'depressionScreen': '정신',
-    'hbvScreen': 'HBV',
-    'bmdScreen': 'BMD',
-    'abdUS': '복',
-    'thyroidUS': '갑',
-    'carotidUS': '경'
+    '건강검진': '검진',
+    '이상지질': '지질',
+    '생활습관': '생활',
+    '노인신체': '노인',
+    '인지기능': '인지',
+    '정신건강': '정신',
+    'B형간염': 'HBV',
+    '골밀도': 'BMD',
+    '위암검진': '위',
+    '대장암검진': '대장암',
+    '위내시경': 'EGD',
+    '대장내시경': 'CFS',
+    '간암검진': '간암',
+    '상복부초음파': '복',
+    '갑상선초음파': '갑',
+    '경동맥초음파': '경',
+    '일반채용': '일채',
+    '공무원채용': '공채',
+    '단순결핵': '단결',
+    '잠복결핵': '잠결',
+    '보건증': '보건',
+    'TBPE': 'TBPE',
+    '요단백': '요단',
+    '당화혈색소': '당화',
+    '골밀도검사': 'BMD검사',
+    '0%': '0',
+    '10%': '10',
+    '진정': '(수)',
+    '비진정': '(비수)',
+    '1차': '1차',
+    '2차': '2차',
+    '2L': '2L',
+    '오라팡': '오라팡',
+    '수프렙': '수프렙',
+    '미수령': '미수',
+    '수령': '수령'
 };
 
 // 검사 항목을 축약형으로 변환하고 정렬하는 함수
@@ -385,7 +397,7 @@ function formatExamType(examTypeObject) {
         const subOptions = examTypeObject.subOptions[key];
         subOptions.forEach(option => {
             const combinedKey = `${key}${option}`; // 예: 'stomachScreen0%'
-            subExams.push(examTypeMap[combinedKey] || option);
+            subExams.push(examTypeMap[option] || option); // Using option directly
         });
     }
 
@@ -408,4 +420,140 @@ function formatExamType(examTypeObject) {
     });
 
     return allExams.join(' ');
+}
+
+// 검사 버튼 로직
+document.addEventListener('DOMContentLoaded', function () {
+    // 건강검진 버튼 클릭 시 서브 옵션 활성화/비활성화
+    document.querySelector('button[data-value="건강검진"]').addEventListener('click', function() {
+        const relatedOptions = document.querySelectorAll('button[data-type="건강검진-옵션"]');
+
+        // 버튼 자체의 active 상태 토글
+        this.classList.toggle('active');
+        
+        // 서브 옵션의 disabled 속성을 토글
+        relatedOptions.forEach(option => {
+            if (option.disabled) {
+                option.disabled = false;
+                option.classList.remove('disabled');
+            } else {
+                option.disabled = true;
+                option.classList.add('disabled');
+                option.classList.remove('active'); // 비활성화 시 색상도 초기화
+            }
+        });
+    });
+
+    // 서브 옵션 클릭 시 활성화 상태 토글
+    document.querySelectorAll('.btn-exam[data-type="건강검진-옵션"]').forEach(button => {
+        button.addEventListener('click', function() {
+            if (!button.disabled) {
+                button.classList.toggle('active');
+            }
+        });
+    });
+
+    // 위암검진, 대장암검진, 간암검진 버튼 클릭 시 활성화 상태 토글 및 서브 옵션 활성화
+    document.querySelector('button[data-value="위암검진"]').addEventListener('click', function() {
+        this.classList.toggle('active');
+        const relatedOptions = document.querySelectorAll('button[data-type="위암검진-본인부담금"], button[data-type="위암검진-진정"]');
+        relatedOptions.forEach(option => {
+            option.disabled = !this.classList.contains('active');
+            option.classList.toggle('disabled', !this.classList.contains('active'));
+            option.classList.toggle('active', this.classList.contains('active'));
+        });
+    });
+
+    document.querySelector('button[data-value="대장암검진"]').addEventListener('click', function() {
+        this.classList.toggle('active');
+        const relatedOption = document.querySelector('button[data-type="대장암검진-차수"]');
+        relatedOption.disabled = !this.classList.contains('active');
+        relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
+        relatedOption.classList.toggle('active', this.classList.contains('active'));
+    });
+
+    document.querySelector('button[data-value="간암검진"]').addEventListener('click', function() {
+        this.classList.toggle('active');
+        const relatedOption = document.querySelector('button[data-type="간암검진-본인부담금"]');
+        relatedOption.disabled = !this.classList.contains('active');
+        relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
+        relatedOption.classList.toggle('active', this.classList.contains('active'));
+    });
+
+    document.querySelector('button[data-value="위내시경"]').addEventListener('click', function() {
+        this.classList.toggle('active');
+        const relatedOption = document.querySelector('button[data-type="위내시경-진정"]');
+        relatedOption.disabled = !this.classList.contains('active');
+        relatedOption.classList.toggle('disabled', !this.classList.contains('active'));
+        relatedOption.classList.toggle('active', this.classList.contains('active'));
+    });
+
+    document.querySelector('button[data-value="대장내시경"]').addEventListener('click', function() {
+        this.classList.toggle('active');
+        const relatedOptions = document.querySelectorAll('button[data-type="대장내시경-장정결제"], button[data-type="대장내시경-장정결제수령"]');
+        relatedOptions.forEach(option => {
+            option.disabled = !this.classList.contains('active');
+            option.classList.toggle('disabled', !this.classList.contains('active'));
+            option.classList.toggle('active', this.classList.contains('active'));
+        });
+    });
+
+    // 초음파 및 기타 검사 버튼 클릭 시 활성화 상태 토글
+    document.querySelectorAll('.btn-exam[data-value="상복부초음파"], .btn-exam[data-value="갑상선초음파"], .btn-exam[data-value="경동맥초음파"], .btn-exam[data-value="일반채용"], .btn-exam[data-value="공무원채용"], .btn-exam[data-value="단순결핵"], .btn-exam[data-value="잠복결핵"], .btn-exam[data-value="보건증"], .btn-exam[data-value="TBPE"], .btn-exam[data-value="요단백"], .btn-exam[data-value="당화혈색소"], .btn-exam[data-value="골밀도검사"]').forEach(button => {
+        button.addEventListener('click', function() {
+            this.classList.toggle('active');
+        });
+    });
+
+    // 토글 로직 추가
+    document.querySelector('button[data-type="위암검진-본인부담금"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['0%', '10%']);
+    });
+
+    document.querySelector('button[data-type="위암검진-진정"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['진정', '비진정']);
+    });
+
+    document.querySelector('button[data-type="대장암검진-차수"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['1차', '2차']);
+
+        // 2차로 토글되면 관련 버튼 활성화 및 active 상태 부여
+        const isSecondStage = this.textContent === '2차';
+        const relatedOptions = document.querySelectorAll('button[data-type="대장암검진-장정결제"], button[data-type="대장암검진-장정결제수령"]');
+        relatedOptions.forEach(option => {
+            option.disabled = !isSecondStage;
+            option.classList.toggle('disabled', !isSecondStage);
+            option.classList.toggle('active', isSecondStage);
+        });
+    });
+
+    document.querySelector('button[data-type="대장암검진-장정결제"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['2L', '오라팡', '수프렙']);
+    });
+
+    document.querySelector('button[data-type="대장암검진-장정결제수령"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['미수령', '수령']);
+    });
+
+    document.querySelector('button[data-type="간암검진-본인부담금"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['0%', '10%']);
+    });
+
+    document.querySelector('button[data-type="위내시경-진정"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['진정', '비진정']);
+    });
+
+    document.querySelector('button[data-type="대장내시경-장정결제"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['2L', '오라팡', '수프렙']);
+    });
+
+    document.querySelector('button[data-type="대장내시경-장정결제수령"]').addEventListener('click', function() {
+        toggleOptionsText(this, ['미수령', '수령']);
+    });
+});
+
+function toggleOptionsText(button, options) {
+    const currentText = button.textContent;
+    const nextIndex = (options.indexOf(currentText) + 1) % options.length;
+    button.textContent = options[nextIndex];
 }

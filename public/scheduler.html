@@ -18,7 +18,7 @@
     <style>
         /* Active 버튼 스타일 */
         .btn-exam.active {
-            background-color: #6a4caf; /* 선택되었을 때 녹색 */
+            background-color: #6a4caf; /* 선택되었을 때 색상 */
             color: white;
         }
         .btn-exam.disabled {
@@ -56,69 +56,69 @@
             <div class="registration-section bg-white shadow-md rounded p-4 h-full">
                 <div class="grid grid-cols-3 gap-2">
                     <input type="text" id="time" name="time" placeholder="예약 시각 선택" class="border p-2 w-full">
-                    <input type="text" id="patientName" name="patientName" placeholder="환자 이름" class="border p-2 w-full">
-                    <input type="text" id="chartNumber" name="chartNumber" placeholder="차트 번호" class="border p-2 w-full">
+                    <input type="text" id="patientName" name="환자이름" placeholder="환자 이름" class="border p-2 w-full">
+                    <input type="text" id="chartNumber" name="차트번호" placeholder="차트 번호" class="border p-2 w-full">
                 </div>
 
                 <!-- 검사 항목 버튼 -->
                 <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
                     <div class="grid grid-cols-3 gap-2">
-                        <button class="btn-exam w-full" data-value="healthCheckup">건강검진</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="lipidScreen" disabled>이상지질</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="lsmScreen" disabled>생활습관</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="elderScreen" disabled>노인신체</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="cognitionScreen" disabled>인지기능</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="depressionScreen" disabled>정신건강</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="hbvScreen" disabled>B형간염</button>
-                        <button class="btn-exam w-full disabled" data-type="healthCheckup-option" data-value="bmdScreen" disabled>골밀도</button>
+                        <button class="btn-exam w-full" data-value="건강검진">건강검진</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="이상지질" disabled>이상지질</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="생활습관" disabled>생활습관</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="노인신체" disabled>노인신체</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="인지기능" disabled>인지기능</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="정신건강" disabled>정신건강</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="B형간염" disabled>B형간염</button>
+                        <button class="btn-exam w-full disabled" data-type="건강검진-옵션" data-value="골밀도" disabled>골밀도</button>
                     </div>
                 </div>
 
                 <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
                     <div class="grid grid-cols-3 gap-2">
-                        <button class="btn-exam w-full" data-value="stomachScreen">위암검진</button>
-                        <button class="btn-exam w-full disabled" data-type="stomachScreen-deductible" disabled>0%</button>
-                        <button class="btn-exam w-full disabled" data-type="stomachScreen-sedation" disabled>진정</button>
-                        <button class="btn-exam w-full" data-value="colonScreen">대장암검진</button>
-                        <button class="btn-exam w-full disabled" data-type="colonScreen-stage" disabled>1차</button>
-                        <button class="btn-exam w-full disabled" data-type="colonScreen-prep" disabled>2L</button>
-                        <button class="btn-exam w-full" data-value="liverScreen">간암검진</button>
-                        <button class="btn-exam w-full disabled" data-type="liverScreen-deductible" disabled>0%</button>
-                        <button class="btn-exam w-full disabled" data-type="colonScreen-received" disabled>미수령</button>
+                        <button class="btn-exam w-full" data-value="위암검진">위암검진</button>
+                        <button class="btn-exam w-full disabled" data-type="위암검진-본인부담금" disabled>0%</button>
+                        <button class="btn-exam w-full disabled" data-type="위암검진-진정" disabled>진정</button>
+                        <button class="btn-exam w-full" data-value="대장암검진">대장암검진</button>
+                        <button class="btn-exam w-full disabled" data-type="대장암검진-차수" disabled>1차</button>
+                        <button class="btn-exam w-full disabled" data-type="대장암검진-장정결제" disabled>2L</button>
+                        <button class="btn-exam w-full" data-value="간암검진">간암검진</button>
+                        <button class="btn-exam w-full disabled" data-type="간암검진-본인부담금" disabled>0%</button>
+                        <button class="btn-exam w-full disabled" data-type="대장암검진-장정결제수령" disabled>미수령</button>
                     </div>
                 </div>
 
                 <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
                     <div class="grid grid-cols-3 gap-2">
-                        <button class="btn-exam w-full" data-value="upperEndoscopy">위내시경</button>
-                        <button class="btn-exam w-full disabled" data-type="upperEndoscopy-sedation" disabled>진정</button>
+                        <button class="btn-exam w-full" data-value="위내시경">위내시경</button>
+                        <button class="btn-exam w-full disabled" data-type="위내시경-진정" disabled>진정</button>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
-                        <button class="btn-exam w-full" data-value="colonoscopy">대장내시경</button>
-                        <button class="btn-exam w-full disabled" data-type="colonoscopy-prep" disabled>2L</button>
-                        <button class="btn-exam w-full disabled" data-type="colonoscopy-received" disabled>미수령</button>
+                        <button class="btn-exam w-full" data-value="대장내시경">대장내시경</button>
+                        <button class="btn-exam w-full disabled" data-type="대장내시경-장정결제" disabled>2L</button>
+                        <button class="btn-exam w-full disabled" data-type="대장내시경-장정결제수령" disabled>미수령</button>
                     </div>
                 </div>
                 
                 <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
                     <div class="grid grid-cols-3 gap-2">
-                        <button class="btn-exam w-full" data-value="abdUS">상복부초음파</button>
-                        <button class="btn-exam w-full" data-value="thyroidUS">갑상선초음파</button>
-                        <button class="btn-exam w-full" data-value="carotidUS">경동맥초음파</button>
+                        <button class="btn-exam w-full" data-value="상복부초음파">상복부초음파</button>
+                        <button class="btn-exam w-full" data-value="갑상선초음파">갑상선초음파</button>
+                        <button class="btn-exam w-full" data-value="경동맥초음파">경동맥초음파</button>
                     </div>
                 </div>
 
                 <div class="exam-section border border-gray-300 rounded-md p-4 mb-4">
                     <div class="grid grid-cols-3 gap-2">
-                        <button class="btn-exam w-full" data-value="generalRecru">일반채용</button>
-                        <button class="btn-exam w-full" data-value="civilRecru">공무원채용</button>
-                        <button class="btn-exam w-full" data-value="tbScreen">단순결핵</button>
-                        <button class="btn-exam w-full" data-value="latentTbScreen">잠복결핵</button>
-                        <button class="btn-exam w-full" data-value="healthCert">보건증</button>
-                        <button class="btn-exam w-full" data-value="tbpe">TBPE</button>
-                        <button class="btn-exam w-full" data-value="urineProtein">요단백</button>
-                        <button class="btn-exam w-full" data-value="hba1c">당화혈색소</button>
-                        <button class="btn-exam w-full" data-value="bmdTest">골밀도검사</button>
+                        <button class="btn-exam w-full" data-value="일반채용">일반채용</button>
+                        <button class="btn-exam w-full" data-value="공무원채용">공무원채용</button>
+                        <button class="btn-exam w-full" data-value="단순결핵">단순결핵</button>
+                        <button class="btn-exam w-full" data-value="잠복결핵">잠복결핵</button>
+                        <button class="btn-exam w-full" data-value="보건증">보건증</button>
+                        <button class="btn-exam w-full" data-value="TBPE">TBPE</button>
+                        <button class="btn-exam w-full" data-value="요단백">요단백</button>
+                        <button class="btn-exam w-full" data-value="당화혈색소">당화혈색소</button>
+                        <button class="btn-exam w-full" data-value="골밀도검사">골밀도검사</button>
                     </div>
                 </div>
                 <div class="flex space-x-2">
