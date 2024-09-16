@@ -118,35 +118,35 @@ function renderCalendar(events) {
                 selectedEventId = eventObj.id;
                 selectedDate = eventObj.start;
                 currentViewDate = eventObj.start;
-            
+
                 const localStartTime = new Date(eventObj.start).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit',
                     hour12: false
                 });
-            
+
                 timeInput.value = localStartTime;
                 patientNameInput.value = eventObj.extendedProps.patientName;
                 chartNumberInput.value = eventObj.extendedProps.chartNumber;
                 memoInput.value = eventObj.extendedProps.memo || '';
-            
+
                 const exams = eventObj.extendedProps.examType;
                 const formattedExams = formatExamType(exams);
                 const selectedExams = exams.mainExams.concat(
                     Object.values(exams.subOptions).flat()
                 );
-            
+
                 document.querySelectorAll('.btn-exam').forEach(button => {
                     button.classList.remove('active');
                 });
-            
+
                 selectedExams.forEach(examType => {
                     const button = document.querySelector(`.btn-exam[data-value='${examType}']`);
                     if (button) {
                         button.classList.add('active');
                     }
                 });
-            
+
                 if (eventObj.extendedProps.status === 'canceled') {
                     restoreBtn.classList.remove('hidden');
                     registerBtn.classList.add('hidden');
@@ -204,12 +204,9 @@ registerBtn.addEventListener('click', async () => {
 
     const utcDate = new Date(selectedDate.toISOString());
 
-    // 검사 종류를 축약형으로 변환
-    const formattedExams = formatExamType(exams);
-
     Swal.fire({
         title: '예약 등록 확인',
-        html: `<strong>예약 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${patientName}<br><strong>차트 번호:</strong> ${chartNumber}<br><strong>검사 종류:</strong> ${formattedExams}`,
+        html: `<strong>예약 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${patientName}<br><strong>차트 번호:</strong> ${chartNumber}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: '등록',
@@ -221,7 +218,7 @@ registerBtn.addEventListener('click', async () => {
                     start: utcDate,
                     patientName,
                     chartNumber,
-                    examType: exams,
+                    examType: JSON.stringify(exams), // Save as JSON string
                     memo
                 });
 
@@ -260,12 +257,9 @@ updateBtn.addEventListener('click', async () => {
 
     const utcDate = new Date(selectedDate.toISOString());
 
-    // 검사 종류를 축약형으로 변환
-    const formattedExams = formatExamType(exams);
-
     Swal.fire({
         title: '예약 수정 확인',
-        html: `<strong>새 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${patientName}<br><strong>차트 번호:</strong> ${chartNumber}<br><strong>검사 종류:</strong> ${formattedExams}`,
+        html: `<strong>새 시각:</strong> ${utcDate.toLocaleString()}<br><strong>환자:</strong> ${patientName}<br><strong>차트 번호:</strong> ${chartNumber}<br><strong>검사 종류:</strong> ${formatExamType(exams)}`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: '수정',
@@ -277,7 +271,7 @@ updateBtn.addEventListener('click', async () => {
                     start: utcDate,
                     patientName,
                     chartNumber,
-                    examType: exams,
+                    examType: JSON.stringify(exams), // Save as JSON string
                     memo
                 });
                 Swal.fire('Success', 'Appointment updated successfully.', 'success');
@@ -291,11 +285,30 @@ updateBtn.addEventListener('click', async () => {
 });
 
 function getSelectedExams() {
-    return {
+    const exams = {
         mainExams: [],
         subOptions: {}
     };
+
+    // Collect main exams
+    document.querySelectorAll('.btn-exam[data-value].active').forEach(button => {
+        exams.mainExams.push(button.getAttribute('data-value'));
+    });
+
+    // Collect sub-options
+    document.querySelectorAll('.btn-exam[data-type].active').forEach(button => {
+        const type = button.getAttribute('data-type');
+        const value = button.textContent;
+
+        if (!exams.subOptions[type]) {
+            exams.subOptions[type] = [];
+        }
+        exams.subOptions[type].push(value);
+    });
+
+    return exams;
 }
+
 
 resetBtn.addEventListener('click', () => {
     timeInput.value = '';
