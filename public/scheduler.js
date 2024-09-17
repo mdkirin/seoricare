@@ -163,13 +163,14 @@ function renderCalendar(events) {
             events: events,
             dayMaxEventRows: 5,
             expandRows: false,
-            locale: 'ko',
+            //locale: 'ko',
             allDaySlot: false,
             eventMinHeight: 20,
             nowIndicator: true,
             editable: true,
             eventDurationEditable: false,
             eventResizableFromStart: true,
+            eventDrop: handleEventDrop, // 드래그 앤 드롭 핸들러 추가
             navLinkDayClick: function (date) {
                 currentViewDate = date;
                 selectedDate = date;
@@ -203,6 +204,41 @@ function renderCalendar(events) {
         calendar.removeAllEvents();
         calendar.addEventSource(events);
     }
+}
+
+async function handleEventDrop(info) {
+    const event = info.event;
+    const eventId = event.id;
+    const newStart = event.start;
+
+    Swal.fire({
+        title: '일정 변경 확인',
+        text: '이 일정을 새로운 시간으로 변경하시겠습니까?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '변경',
+        cancelButtonText: '취소'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await updateDoc(doc(db, 'appointments', eventId), {
+                    start: newStart
+                });
+
+                Swal.fire('변경 완료', '일정이 성공적으로 변경되었습니다.', 'success');
+                const events = await fetchEvents();
+                renderCalendar(events);
+            } catch (error) {
+                Swal.fire('오류', '일정 변경 과정에 문제가 있습니다.', 'error');
+                console.error('Error updating document:', error);
+                // 원래 위치로 되돌리기
+                info.revert();
+            }
+        } else {
+            // 사용자가 취소를 선택한 경우 원래 위치로 되돌리기
+            info.revert();
+        }
+    });
 }
 
 // 이벤트 클릭 핸들러
