@@ -593,7 +593,7 @@ video {
   margin: 4px;
 }
 
-.btn-health-check.active, .btn-cancer-check.active, .btn-cancer-option.active, .btn-cancer-type.active {
+.btn-health-check.selected, .btn-cancer-check.selected, .btn-cancer-option.selected, .btn-cancer-type.selected {
   background-color: #007bff;
   color: white;
 }
@@ -603,7 +603,7 @@ video {
   color: white;
 }
 
-.active {
+.selected {
   background-color: #4A90E2;
   color: white;
   border: 1px solid #3A6EA5;
@@ -631,7 +631,7 @@ video {
   cursor: pointer;
 }
 
-.btn-exam.active {
+.btn-exam.selected {
   background-color: #4C51BF; /* Indigo */
   color: #FFFFFF;
 }
@@ -651,7 +651,7 @@ video {
   gap: 0.5rem; /* 버튼 사이의 간격을 설정 */
 }
 
-.btn-cancer-option.active, .btn-cancer-type.active {
+.btn-cancer-option.selected, .btn-cancer-type.selected {
   background-color: #4A90E2;
   color: white;
 }
@@ -666,7 +666,7 @@ video {
   margin: 4px;
 }
 
-.mdc-segmented-button__segment.active {
+.mdc-segmented-button__segment.selected {
   background-color: #4A90E2;
   color: white;
 }
@@ -684,7 +684,7 @@ video {
   margin-left: 10px;
 }
 
-.btn-cancer-option.active, .btn-cancer-type.active {
+.btn-cancer-option.selected, .btn-cancer-type.selected {
   background-color: #4A90E2;
   color: white;
 }
@@ -705,7 +705,7 @@ video {
   margin-left: 10px;
 }
 
-.btn-cancer-option.active, .btn-cancer-type.active {
+.btn-cancer-option.selected, .btn-cancer-type.selected {
   background-color: #4A90E2;
   color: white;
 }
