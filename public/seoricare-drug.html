@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>마약류 관리</title>
+    <!-- Tailwind CSS 및 아이콘 라이브러리 추가 -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- JavaScript 파일 추가 -->
     <script type="module" src="./seoricare-drug.js"></script>
     <!-- SheetJS 라이브러리 추가 -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -23,28 +25,34 @@
     </nav>
 
     <!-- 메인 콘텐츠 좌우 분할 -->
-    <div class="container mx-auto mt-4 px-4 flex" style="max-width: 100%; height: calc(100vh - 4rem);">
-        <!-- 왼쪽 섹션: 마약류 재고 목록 (2/3 비율) -->
-        <div class="w-2/3 p-4 bg-white rounded shadow-md mr-4 overflow-auto">
-            <h2 class="text-lg font-bold mb-4">마약류 재고 목록</h2>
-            <!-- 마약류 목록 테이블 -->
-            <table class="min-w-full bg-white border">
+    <div class="container mx-auto mt-4 px-4 flex" style="max-width: 100%; height: calc(100vh - 6rem);">
+    <!-- 왼쪽 섹션: 마약류 재고 목록 (2/3 비율) -->
+    <div id="테이블컨테이너" class="w-2/3 p-4 bg-white rounded shadow-md mr-4 flex flex-col" style="height: 100%;">
+        <!-- 테이블 제목 -->
+        <h2 class="text-lg font-bold mb-4">마약류 재고 목록</h2>
+        <!-- 테이블 부분 -->
+        <div id="테이블스크롤영역" class="flex-grow overflow-auto">
+            <table class="min-w-full bg-white border text-center">
+                <!-- 테이블 내용 -->
                 <thead>
                     <tr>
-                        <th class="py-2 cursor-pointer" onclick="정렬('제품명')">제품명</th>
-                        <th class="py-2 cursor-pointer" onclick="정렬('성분명')">성분명</th>
-                        <th class="py-2 cursor-pointer" onclick="정렬('일련번호')">일련번호</th>
-                        <th class="py-2 cursor-pointer" onclick="정렬('앰플용량')">앰플 용량 (mL)</th>
-                        <th class="py-2 cursor-pointer" onclick="정렬('앰플수량')">앰플 수량</th>
-                        <th class="py-2 cursor-pointer" onclick="정렬('재고량')">재고량</th>
-                    </tr>
-                </thead>
+                        <th class="py-2 cursor-pointer text-center" onclick="정렬('제품명')">제품명</th>
+                        <th class="py-2 cursor-pointer text-center" onclick="정렬('성분명')">성분명</th>
+                        <th class="py-2 cursor-pointer text-center" onclick="정렬('일련번호')">일련번호</th>
+                        <th class="py-2 cursor-pointer text-center" onclick="정렬('앰플용량')">앰플 용량 (mL)</th>
+                        <th class="py-2 cursor-pointer text-center" onclick="정렬('앰플수량')">앰플 수량</th>
+                        <th class="py-2 cursor-pointer text-center" onclick="정렬('재고량')">재고량</th>
+                    </tr>                </thead>
                 <tbody id="마약류테이블">
-                    <!-- Firebase에서 로드된 데이터가 여기에 표시됩니다 -->
+                    <!-- 테이블 데이터 -->
                 </tbody>
             </table>
         </div>
-
+        <!-- 합계 표시 영역 -->
+        <div id="합계표시영역" class="mt-4 p-4 bg-white rounded shadow-md">
+            <!-- 합계 내용은 JavaScript에서 채워집니다 -->
+        </div>
+    </div>
         <!-- 오른쪽 섹션: 마약류 기록 추가 및 엑셀 업로드 (1/3 비율) -->
         <div class="w-1/3 p-4 bg-white rounded shadow-md overflow-auto">
             <h2 class="text-lg font-bold mb-4">마약류 추가 / 수정</h2>
@@ -80,17 +88,23 @@
                     <input id="재고량" type="number" class="w-full px-3 py-2 border rounded" placeholder="재고량 입력">
                 </div>
             </div>
-            <button id="추가버튼" onclick="마약류추가()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">추가</button>
-            <button id="수정버튼" onclick="마약류수정()" class="mt-4 bg-yellow-500 text-white px-4 py-2 rounded hidden">수정</button>
-            <button id="삭제버튼" onclick="마약류삭제()" class="mt-4 bg-red-500 text-white px-4 py-2 rounded hidden">삭제</button>
-            <!-- 엑셀 파일 업로드 -->
-<h2 class="text-lg font-bold mt-8 mb-4">엑셀 업로드</h2>
-<input type="file" id="엑셀파일" accept=".xlsx, .xls" class="mb-4">
-<button onclick="엑셀업로드()" class="bg-green-500 text-white px-4 py-2 rounded">업로드</button>
+            <!-- 버튼 그룹 -->
+            <div class="mt-4 flex space-x-2">
+                <button id="추가버튼" onclick="마약류추가()" class="bg-blue-500 text-white px-4 py-2 rounded">추가</button>
+                <button id="수정버튼" onclick="마약류수정()" class="bg-yellow-500 text-white px-4 py-2 rounded hidden">수정</button>
+                <button id="삭제버튼" onclick="마약류삭제()" class="bg-red-500 text-white px-4 py-2 rounded hidden">삭제</button>
+                <!-- '사용중인 일련번호' 버튼 추가 -->
+                <button id="사용중버튼" onclick="사용중인일련번호추가()" class="bg-green-500 text-white px-4 py-2 rounded hidden">사용중인 일련번호</button>
+            </div>
 
-<!-- DB 삭제 버튼 -->
-<h2 class="text-lg font-bold mt-8 mb-4">데이터베이스 관리</h2>
-<button onclick="DB삭제()" class="bg-red-500 text-white px-4 py-2 rounded">DB 삭제</button>
+            <!-- 엑셀 파일 업로드 -->
+            <h2 class="text-lg font-bold mt-8 mb-4">엑셀 업로드</h2>
+            <input type="file" id="엑셀파일" accept=".xlsx, .xls" class="mb-4">
+            <button onclick="엑셀업로드()" class="bg-green-500 text-white px-4 py-2 rounded">업로드</button>
+
+            <!-- DB 삭제 버튼 -->
+            <h2 class="text-lg font-bold mt-8 mb-4">데이터베이스 관리</h2>
+            <button onclick="DB삭제()" class="bg-red-500 text-white px-4 py-2 rounded">DB 삭제</button>
         </div>
     </div>
 </body>

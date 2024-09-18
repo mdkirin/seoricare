@@ -1,7 +1,7 @@
 // firebase.js
 
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js';
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, setDoc, where } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
 // Firebase configuration
@@ -37,4 +37,4 @@ onAuthStateChanged(auth, user => {
     }
 });
 
-export { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc,onAuthStateChanged };
+export { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc,onAuthStateChanged, setDoc,where };
