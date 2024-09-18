@@ -4,6 +4,11 @@ let 약물정보캐시 = {}; // 약물 정보를 캐싱하여 사용
 let 업로드중약물정보캐시 = {}; // 엑셀 업로드 중에 약물 정보를 캐싱하여 반복 입력 방지
 let 현재수정중인문서 = null; // 현재 수정 중인 문서 ID를 저장
 
+let 선택된행 = null; // 현재 선택된 행의 ID를 저장
+let 데이터목록 = []; // 마약류 데이터를 저장
+let 현재정렬키 = ''; // 현재 정렬 기준 키
+let 오름차순정렬 = true; // 정렬 순서 (true: 오름차순, false: 내림차순)
+
 // 마약류_정보에 저장된 약물 정보 캐시로 가져오기
 async function 약물정보가져오기() {
     const querySnapshot = await getDocs(collection(db, '마약류_정보'));
@@ -78,16 +83,13 @@ export async function 엑셀업로드() {
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        for (const item of jsonData) {
-            const { 제품명, 일련번호, 재고량 } = item;
-            let 약물정보 = 약물정보캐시[제품명];
-            let 성분명 = '';
+        // 사용자 입력이 필요한 항목들과 아닌 항목들을 분리
+        const 사용자입력필요없음 = [];
+        const 사용자입력필요 = [];
 
-            // 제품명에서 성분명 결정 (미다졸람, 프로포폴, 페티딘, 디아제팜 중 선택)
-            if (제품명.includes('미다졸람')) 성분명 = '미다졸람';
-            else if (제품명.includes('프로포폴')) 성분명 = '프로포폴';
-            else if (제품명.includes('페티딘')) 성분명 = '페티딘';
-            else if (제품명.includes('디아제팜')) 성분명 = '디아제팜';
+        for (const item of jsonData) {
+            const { 제품명 } = item;
+            let 약물정보 = 약물정보캐시[제품명];
 
             // 업로드 중 약물 정보 캐시에서 확인
             if (업로드중약물정보캐시[제품명]) {
@@ -95,28 +97,75 @@ export async function 엑셀업로드() {
             }
 
             if (!약물정보) {
-                // 약물정보가 없을 경우 사용자에게 입력받음
-                const 입력값 = await 앰플정보입력모달(제품명);
-                if (입력값 === null) {
-                    // 사용자가 취소 버튼을 눌렀을 때 작업 중단
-                    break;
-                }
-                약물정보 = {
-                    앰플용량: 입력값.앰플용량,
-                    앰플수량: 입력값.앰플수량
-                };
-
-                // 새로운 약물 정보를 마약류_정보 컬렉션에 저장
-                await addDoc(collection(db, '마약류_정보'), {
-                    제품명,
-                    앰플용량: 약물정보.앰플용량,
-                    앰플수량: 약물정보.앰플수량
-                });
-
-                // 캐시에 저장하여 반복 입력 방지
-                약물정보캐시[제품명] = 약물정보;
-                업로드중약물정보캐시[제품명] = 약물정보;
+                // 약물정보가 없으므로 사용자 입력이 필요함
+                사용자입력필요.push(item);
+            } else {
+                // 약물정보가 있으므로 사용자 입력 없이 처리 가능
+                사용자입력필요없음.push({ item, 약물정보 });
             }
+        }
+
+        // 사용자 입력이 필요 없는 항목들 병렬 처리
+        const promises = 사용자입력필요없음.map(async ({ item, 약물정보 }) => {
+            const { 제품명, 일련번호, 재고량 } = item;
+            let 성분명 = '';
+
+            // 제품명에서 성분명 결정
+            if (제품명.includes('미다졸람')) 성분명 = '미다졸람';
+            else if (제품명.includes('프로포폴')) 성분명 = '프로포폴';
+            else if (제품명.includes('페티딘')) 성분명 = '페티딘';
+            else if (제품명.includes('디아제팜')) 성분명 = '디아제팜';
+
+            try {
+                // 마약류_저장소에 약물 정보 저장
+                await addDoc(collection(db, '마약류_저장소'), {
+                    제품명,
+                    성분명,
+                    일련번호,
+                    앰플용량: 약물정보.앰플용량,
+                    앰플수량: 약물정보.앰플수량,
+                    재고량: parseInt(재고량),
+                    생성일시: new Date()
+                });
+            } catch (e) {
+                console.error("문서 추가 중 오류 발생: ", e);
+            }
+        });
+
+        await Promise.all(promises); // 병렬 작업 완료 대기
+
+        // 사용자 입력이 필요한 항목들 순차적으로 처리
+        for (const item of 사용자입력필요) {
+            const { 제품명, 일련번호, 재고량 } = item;
+            let 성분명 = '';
+
+            // 제품명에서 성분명 결정
+            if (제품명.includes('미다졸람')) 성분명 = '미다졸람';
+            else if (제품명.includes('프로포폴')) 성분명 = '프로포폴';
+            else if (제품명.includes('페티딘')) 성분명 = '페티딘';
+            else if (제품명.includes('디아제팜')) 성분명 = '디아제팜';
+
+            // 사용자에게 입력 받기
+            const 입력값 = await 앰플정보입력모달(제품명);
+            if (입력값 === null) {
+                // 사용자가 취소 버튼을 눌렀을 때 작업 중단
+                break;
+            }
+            const 약물정보 = {
+                앰플용량: 입력값.앰플용량,
+                앰플수량: 입력값.앰플수량
+            };
+
+            // 새로운 약물 정보를 마약류_정보 컬렉션에 저장
+            await addDoc(collection(db, '마약류_정보'), {
+                제품명,
+                앰플용량: 약물정보.앰플용량,
+                앰플수량: 약물정보.앰플수량
+            });
+
+            // 캐시에 저장하여 반복 입력 방지
+            약물정보캐시[제품명] = 약물정보;
+            업로드중약물정보캐시[제품명] = 약물정보;
 
             try {
                 // 마약류_저장소에 약물 정보 저장
@@ -133,6 +182,7 @@ export async function 엑셀업로드() {
                 console.error("문서 추가 중 오류 발생: ", e);
             }
         }
+
         alert('엑셀 데이터가 업로드되었습니다.');
         마약류로드();
     };
@@ -194,80 +244,142 @@ export async function 마약류수정() {
             재고량
         });
         alert('마약류 기록이 수정되었습니다.');
-        현재수정중인문서 = null; // 수정 완료 후 초기화
+        선택된행 = null;
         document.getElementById('수정버튼').classList.add('hidden');
+        document.getElementById('삭제버튼').classList.add('hidden');
         document.getElementById('추가버튼').classList.remove('hidden');
-        마약류로드();
+        폼초기화();
     } catch (e) {
         console.error("문서 수정 중 오류 발생: ", e);
     }
 }
 
-// 마약류 삭제 함수
 export async function 마약류삭제() {
     if (!현재수정중인문서) {
         alert('삭제할 항목을 선택하세요.');
         return;
     }
 
+    const 확인 = confirm('정말로 이 항목을 삭제하시겠습니까?');
+    if (!확인) return;
+
     try {
         await deleteDoc(doc(db, '마약류_저장소', 현재수정중인문서));
         alert('마약류 기록이 삭제되었습니다.');
         현재수정중인문서 = null; // 삭제 완료 후 초기화
+        선택된행 = null;
         document.getElementById('수정버튼').classList.add('hidden');
+        document.getElementById('삭제버튼').classList.add('hidden');
         document.getElementById('추가버튼').classList.remove('hidden');
+        폼초기화();
         마약류로드();
     } catch (e) {
         console.error("문서 삭제 중 오류 발생: ", e);
+        alert('삭제 중 오류가 발생했습니다.');
     }
 }
 
 // 마약류 목록 로드 함수
 export async function 마약류로드() {
-    const 마약류테이블 = document.getElementById('마약류테이블');
-    마약류테이블.innerHTML = ''; // 테이블 초기화
-
     const querySnapshot = await getDocs(collection(db, '마약류_저장소'));
-    const 데이터목록 = [];
+    데이터목록 = [];
     querySnapshot.forEach((doc) => {
         const data = { id: doc.id, ...doc.data() };
         데이터목록.push(data);
     });
 
+    // 데이터 표시 갱신
+    표시갱신();
+}
+
+// 데이터 표시 갱신 함수
+function 표시갱신() {
+    const 마약류테이블 = document.getElementById('마약류테이블');
+    마약류테이블.innerHTML = '';
+
+    // 현재 정렬 상태에 따라 데이터 목록 정렬
+    if (현재정렬키) {
+        데이터목록.sort((a, b) => {
+            if (a[현재정렬키] < b[현재정렬키]) return 오름차순정렬 ? -1 : 1;
+            if (a[현재정렬키] > b[현재정렬키]) return 오름차순정렬 ? 1 : -1;
+            return 0;
+        });
+    }
+
     데이터목록.forEach((data) => {
-        const row = `<tr onclick="항목선택('${data.id}')" class="cursor-pointer hover:bg-gray-200">
+        const row = document.createElement('tr');
+        row.classList.add('cursor-pointer', 'hover:bg-gray-200');
+
+        // 선택된 행이면 배경색 변경
+        if (선택된행 === data.id) {
+            row.classList.add('bg-blue-100');
+        }
+
+        row.onclick = () => 항목선택(data.id);
+
+        row.innerHTML = `
             <td>${data.제품명}</td>
             <td>${data.성분명}</td>
             <td>${data.일련번호}</td>
             <td>${data.앰플용량}</td>
             <td>${data.앰플수량}</td>
             <td>${data.재고량}</td>
-        </tr>`;
-        마약류테이블.innerHTML += row;
+        `;
+        마약류테이블.appendChild(row);
     });
 }
 
-// 항목을 선택하고 수정 모드로 전환하는 함수
 window.항목선택 = function(docId) {
     현재수정중인문서 = docId; // 현재 수정 중인 문서 ID 설정
-    const docRef = doc(db, '마약류_저장소', docId);
-    getDocs(collection(db, '마약류_저장소')).then(querySnapshot => {
-        querySnapshot.forEach((doc) => {
-            if (doc.id === docId) {
-                const data = doc.data();
-                document.getElementById('제품명').value = data.제품명;
-                document.getElementById('성분명').value = data.성분명;
-                document.getElementById('일련번호').value = data.일련번호;
-                document.getElementById('앰플용량').value = data.앰플용량;
-                document.getElementById('앰플수량').value = data.앰플수량;
-                document.getElementById('재고량').value = data.재고량;
+    선택된행 = docId; // 선택된 행 ID 저장
 
-                // 수정 버튼을 표시하고 추가 버튼을 숨김
-                document.getElementById('수정버튼').classList.remove('hidden');
-                document.getElementById('추가버튼').classList.add('hidden');
-            }
-        });
-    });
+    const data = 데이터목록.find(item => item.id === docId);
+    if (data) {
+        // 폼에 데이터 채우기
+        document.getElementById('제품명').value = data.제품명;
+        document.getElementById('성분명').value = data.성분명;
+        document.getElementById('일련번호').value = data.일련번호;
+        document.getElementById('앰플용량').value = data.앰플용량;
+        document.getElementById('앰플수량').value = data.앰플수량;
+        document.getElementById('재고량').value = data.재고량;
+
+        // 수정 및 삭제 버튼을 표시하고 추가 버튼을 숨김
+        document.getElementById('수정버튼').classList.remove('hidden');
+        document.getElementById('삭제버튼').classList.remove('hidden');
+        document.getElementById('추가버튼').classList.add('hidden');
+
+        // 테이블 표시 갱신 (선택된 행 시각적 표시를 위해)
+        표시갱신();
+    }
+}
+
+// 정렬 함수
+window.정렬 = function(정렬키) {
+    if (현재정렬키 === 정렬키) {
+        // 같은 열을 다시 클릭하면 정렬 순서 변경
+        오름차순정렬 = !오름차순정렬;
+    } else {
+        // 다른 열을 클릭하면 해당 열로 정렬하고 오름차순으로 설정
+        현재정렬키 = 정렬키;
+        오름차순정렬 = true;
+    }
+    표시갱신();
+}
+
+function 폼초기화() {
+    document.getElementById('제품명').value = '';
+    document.getElementById('성분명').value = '';
+    document.getElementById('일련번호').value = '';
+    document.getElementById('앰플용량').value = '';
+    document.getElementById('앰플수량').value = '';
+    document.getElementById('재고량').value = '';
+
+    현재수정중인문서 = null;
+    선택된행 = null;
+    document.getElementById('수정버튼').classList.add('hidden');
+    document.getElementById('삭제버튼').classList.add('hidden');
+    document.getElementById('추가버튼').classList.remove('hidden');
+    표시갱신();
 }
 
 // DB 삭제 함수
@@ -308,3 +420,4 @@ window.마약류수정 = 마약류수정;
 window.마약류삭제 = 마약류삭제;
 window.DB삭제 = DB삭제;
 window.마약류로드 = 마약류로드;
+window.정렬 = 정렬;
