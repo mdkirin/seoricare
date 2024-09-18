@@ -1,66 +1,70 @@
-import { db, collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from './firebase.js';
+import { db, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from './firebase.js';
+
+let 약물정보캐시 = {}; // 약물 정보를 캐싱하여 사용
+let 업로드중약물정보캐시 = {}; // 엑셀 업로드 중에 약물 정보를 캐싱하여 반복 입력 방지
 let 현재수정중인문서 = null; // 현재 수정 중인 문서 ID를 저장
-let 정렬상태 = { 필드: '', 오름차순: true }; // 정렬 상태 저장
-let 앰플정보캐시 = {}; // 제품명에 대한 앰플정보 캐시
 
-// 앰플 용량 추출 함수
-function 제품명에서앰플용량추출(제품명) {
-    // 용량 단위를 인식하도록 정규식 개선 (ml, ㎖ 등)
-    const 용량매치 = 제품명.match(/(\d+(\.\d+)?)\s*[m㎖]l?\b/i);
-    
-    // 매칭된 값이 있을 경우에만 반환
-    if (용량매치) {
-        return parseFloat(용량매치[1]);
-    }
-    return null;
-}
-
-// 마약류_정보에 저장된 약물 정보 가져오기
-async function 약물정보가져오기(제품명) {
-    if (앰플정보캐시[제품명]) {
-        return 앰플정보캐시[제품명]; // 캐시에 존재하면 바로 반환
-    }
-    
+// 마약류_정보에 저장된 약물 정보 캐시로 가져오기
+async function 약물정보가져오기() {
     const querySnapshot = await getDocs(collection(db, '마약류_정보'));
-    let 약물정보 = null;
     querySnapshot.forEach((doc) => {
         const data = doc.data();
-        if (data.제품명 === 제품명) {
-            약물정보 = data;
-            앰플정보캐시[제품명] = data; // 캐시에 저장
-        }
+        약물정보캐시[data.제품명] = data; // 제품명을 키로 캐싱
     });
-    return 약물정보;
 }
 
-// 앰플수량을 입력받는 팝업 창 표시
-async function 앰플수량입력팝업(제품명) {
-    if (앰플정보캐시[제품명]) {
-        return 앰플정보캐시[제품명]; // 캐시에 존재하면 바로 반환
-    }
-
-    // 앰플용량을 제품명에서 추출
-    let 추출된앰플용량 = 제품명에서앰플용량추출(제품명);
-
+// 모달 창을 띄워 앰플용량과 앰플수량을 입력받는 함수
+function 앰플정보입력모달(제품명) {
     return new Promise((resolve) => {
-        const 앰플수량 = prompt(`새로운 약물 ${제품명}에 대한 앰플수량을 입력해주세요:`);
-        const 앰플용량 = 추출된앰플용량 !== null ? 추출된앰플용량 : prompt(`새로운 약물 ${제품명}에 대한 앰플용량(mL)을 입력해주세요:`);
+        // 모달 요소 생성
+        const modalOverlay = document.createElement('div');
+        modalOverlay.classList.add('fixed', 'inset-0', 'flex', 'items-center', 'justify-center', 'bg-black', 'bg-opacity-50');
+        modalOverlay.innerHTML = `
+            <div class="bg-white p-6 rounded shadow-md">
+                <h2 class="text-lg font-bold mb-4">앰플 정보 입력</h2>
+                <p>제품명: <strong>${제품명}</strong></p>
+                <div class="mt-4">
+                    <label class="block">앰플 용량 (mL)</label>
+                    <input id="modal앰플용량" type="number" step="0.01" class="w-full px-3 py-2 border rounded" placeholder="용량 입력">
+                </div>
+                <div class="mt-4">
+                    <label class="block">앰플 수량</label>
+                    <input id="modal앰플수량" type="number" class="w-full px-3 py-2 border rounded" placeholder="수량 입력">
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button id="modal취소버튼" class="bg-gray-500 text-white px-4 py-2 rounded mr-2">취소</button>
+                    <button id="modal확인버튼" class="bg-blue-500 text-white px-4 py-2 rounded">확인</button>
+                </div>
+            </div>
+        `;
 
-        if (앰플수량 && 앰플용량) {
-            const 약물정보 = { 앰플수량: parseInt(앰플수량), 앰플용량: parseFloat(앰플용량) };
-            앰플정보캐시[제품명] = 약물정보; // 캐시에 저장
-            resolve(약물정보);
-        } else {
-            resolve(null);
-        }
+        document.body.appendChild(modalOverlay);
+
+        // 이벤트 리스너 설정
+        document.getElementById('modal취소버튼').onclick = () => {
+            document.body.removeChild(modalOverlay);
+            resolve(null); // 취소 시 null 반환
+        };
+
+        document.getElementById('modal확인버튼').onclick = () => {
+            const 앰플용량 = parseFloat(document.getElementById('modal앰플용량').value);
+            const 앰플수량 = parseInt(document.getElementById('modal앰플수량').value);
+            if (!앰플용량 || !앰플수량) {
+                alert('앰플 용량과 수량을 모두 입력해주세요.');
+                return;
+            }
+            document.body.removeChild(modalOverlay);
+            resolve({ 앰플용량, 앰플수량 });
+        };
     });
 }
 
 // 엑셀 파일 업로드 함수
 export async function 엑셀업로드() {
+    await 약물정보가져오기(); // 약물 정보 캐시 가져오기
     const fileInput = document.getElementById('엑셀파일');
     const file = fileInput.files[0];
-    
+
     if (!file) {
         alert('엑셀 파일을 선택하세요.');
         return;
@@ -73,28 +77,52 @@ export async function 엑셀업로드() {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
-        
+
         for (const item of jsonData) {
             const { 제품명, 일련번호, 재고량 } = item;
-            let 약물정보 = await 약물정보가져오기(제품명);
+            let 약물정보 = 약물정보캐시[제품명];
+            let 성분명 = '';
+
+            // 제품명에서 성분명 결정 (미다졸람, 프로포폴, 페티딘, 디아제팜 중 선택)
+            if (제품명.includes('미다졸람')) 성분명 = '미다졸람';
+            else if (제품명.includes('프로포폴')) 성분명 = '프로포폴';
+            else if (제품명.includes('페티딘')) 성분명 = '페티딘';
+            else if (제품명.includes('디아제팜')) 성분명 = '디아제팜';
+
+            // 업로드 중 약물 정보 캐시에서 확인
+            if (업로드중약물정보캐시[제품명]) {
+                약물정보 = 업로드중약물정보캐시[제품명];
+            }
 
             if (!약물정보) {
-                약물정보 = await 앰플수량입력팝업(제품명);
-                if (약물정보) {
-                    await addDoc(collection(db, '마약류_정보'), {
-                        제품명,
-                        앰플수량: 약물정보.앰플수량,
-                        앰플용량: 약물정보.앰플용량
-                    });
-                } else {
-                    continue;
+                // 약물정보가 없을 경우 사용자에게 입력받음
+                const 입력값 = await 앰플정보입력모달(제품명);
+                if (입력값 === null) {
+                    // 사용자가 취소 버튼을 눌렀을 때 작업 중단
+                    break;
                 }
+                약물정보 = {
+                    앰플용량: 입력값.앰플용량,
+                    앰플수량: 입력값.앰플수량
+                };
+
+                // 새로운 약물 정보를 마약류_정보 컬렉션에 저장
+                await addDoc(collection(db, '마약류_정보'), {
+                    제품명,
+                    앰플용량: 약물정보.앰플용량,
+                    앰플수량: 약물정보.앰플수량
+                });
+
+                // 캐시에 저장하여 반복 입력 방지
+                약물정보캐시[제품명] = 약물정보;
+                업로드중약물정보캐시[제품명] = 약물정보;
             }
 
             try {
+                // 마약류_저장소에 약물 정보 저장
                 await addDoc(collection(db, '마약류_저장소'), {
                     제품명,
-                    성분명: '', // 성분명을 파싱하거나 추가해야 할 경우 여기에 작성
+                    성분명,
                     일련번호,
                     앰플용량: 약물정보.앰플용량,
                     앰플수량: 약물정보.앰플수량,
@@ -108,39 +136,29 @@ export async function 엑셀업로드() {
         alert('엑셀 데이터가 업로드되었습니다.');
         마약류로드();
     };
-    
+
     reader.readAsArrayBuffer(file);
 }
 
-// 마약류 추가 함수 (직접 입력)
+// 나머지 함수들은 이전과 동일합니다...
+
+// 나머지 함수들은 이전과 동일합니다...
+// 마약류 추가 함수
 export async function 마약류추가() {
     const 제품명 = document.getElementById('제품명').value;
     const 성분명 = document.getElementById('성분명').value;
     const 일련번호 = document.getElementById('일련번호').value;
+    const 앰플용량 = parseFloat(document.getElementById('앰플용량').value);
+    const 앰플수량 = parseInt(document.getElementById('앰플수량').value);
     const 재고량 = parseInt(document.getElementById('재고량').value);
-
-    let 약물정보 = await 약물정보가져오기(제품명);
-    
-    if (!약물정보) {
-        약물정보 = await 앰플수량입력팝업(제품명);
-        if (약물정보) {
-            await addDoc(collection(db, '마약류_정보'), {
-                제품명,
-                앰플수량: 약물정보.앰플수량,
-                앰플용량: 약물정보.앰플용량
-            });
-        } else {
-            return;
-        }
-    }
 
     try {
         await addDoc(collection(db, '마약류_저장소'), {
             제품명,
             성분명,
             일련번호,
-            앰플용량: 약물정보.앰플용량,
-            앰플수량: 약물정보.앰플수량,
+            앰플용량,
+            앰플수량,
             재고량,
             생성일시: new Date()
         });
@@ -161,8 +179,8 @@ export async function 마약류수정() {
     const 제품명 = document.getElementById('제품명').value;
     const 성분명 = document.getElementById('성분명').value;
     const 일련번호 = document.getElementById('일련번호').value;
-    const 앰플용량 = parseFloat(document.getElementById('앰플용량').value); // 추가: 정확한 용량 업데이트
-    const 앰플수량 = parseInt(document.getElementById('앰플수량').value); // 추가: 정확한 수량 업데이트
+    const 앰플용량 = parseFloat(document.getElementById('앰플용량').value);
+    const 앰플수량 = parseInt(document.getElementById('앰플수량').value);
     const 재고량 = parseInt(document.getElementById('재고량').value);
 
     try {
@@ -171,8 +189,8 @@ export async function 마약류수정() {
             제품명,
             성분명,
             일련번호,
-            앰플용량, // 수정: 올바른 앰플 용량 업데이트
-            앰플수량, // 수정: 올바른 앰플 수량 업데이트
+            앰플용량,
+            앰플수량,
             재고량
         });
         alert('마약류 기록이 수정되었습니다.');
@@ -182,6 +200,25 @@ export async function 마약류수정() {
         마약류로드();
     } catch (e) {
         console.error("문서 수정 중 오류 발생: ", e);
+    }
+}
+
+// 마약류 삭제 함수
+export async function 마약류삭제() {
+    if (!현재수정중인문서) {
+        alert('삭제할 항목을 선택하세요.');
+        return;
+    }
+
+    try {
+        await deleteDoc(doc(db, '마약류_저장소', 현재수정중인문서));
+        alert('마약류 기록이 삭제되었습니다.');
+        현재수정중인문서 = null; // 삭제 완료 후 초기화
+        document.getElementById('수정버튼').classList.add('hidden');
+        document.getElementById('추가버튼').classList.remove('hidden');
+        마약류로드();
+    } catch (e) {
+        console.error("문서 삭제 중 오류 발생: ", e);
     }
 }
 
@@ -197,13 +234,6 @@ export async function 마약류로드() {
         데이터목록.push(data);
     });
 
-    // 정렬 적용
-    데이터목록.sort((a, b) => {
-        if (a[정렬상태.필드] < b[정렬상태.필드]) return 정렬상태.오름차순 ? -1 : 1;
-        if (a[정렬상태.필드] > b[정렬상태.필드]) return 정렬상태.오름차순 ? 1 : -1;
-        return 0;
-    });
-
     데이터목록.forEach((data) => {
         const row = `<tr onclick="항목선택('${data.id}')" class="cursor-pointer hover:bg-gray-200">
             <td>${data.제품명}</td>
@@ -217,25 +247,10 @@ export async function 마약류로드() {
     });
 }
 
-// 정렬 함수
-window.정렬 = function(필드) {
-    if (정렬상태.필드 === 필드) {
-        정렬상태.오름차순 = !정렬상태.오름차순; // 같은 필드면 정렬 방향 변경
-    } else {
-        정렬상태.필드 = 필드;
-        정렬상태.오름차순 = true; // 새 필드면 오름차순 정렬
-    }
-    마약류로드();
-}
-
 // 항목을 선택하고 수정 모드로 전환하는 함수
 window.항목선택 = function(docId) {
     현재수정중인문서 = docId; // 현재 수정 중인 문서 ID 설정
     const docRef = doc(db, '마약류_저장소', docId);
-    
-    // 모든 행의 강조 표시를 제거
-    document.querySelectorAll('#마약류테이블 tr').forEach(row => row.classList.remove('bg-blue-100'));
-
     getDocs(collection(db, '마약류_저장소')).then(querySnapshot => {
         querySnapshot.forEach((doc) => {
             if (doc.id === docId) {
@@ -246,9 +261,6 @@ window.항목선택 = function(docId) {
                 document.getElementById('앰플용량').value = data.앰플용량;
                 document.getElementById('앰플수량').value = data.앰플수량;
                 document.getElementById('재고량').value = data.재고량;
-
-                // 해당 행에 강조 표시
-                document.querySelector(`tr[onclick="항목선택('${docId}')"]`).classList.add('bg-blue-100');
 
                 // 수정 버튼을 표시하고 추가 버튼을 숨김
                 document.getElementById('수정버튼').classList.remove('hidden');
@@ -293,4 +305,6 @@ window.onload = function() {
 window.엑셀업로드 = 엑셀업로드;
 window.마약류추가 = 마약류추가;
 window.마약류수정 = 마약류수정;
+window.마약류삭제 = 마약류삭제;
 window.DB삭제 = DB삭제;
+window.마약류로드 = 마약류로드;
