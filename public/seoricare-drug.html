@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마약류 관리</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script type="module" src="./seoricare-drug.js"></script>
+    <!-- SheetJS 라이브러리 추가 -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
+    <!-- 상단바 -->
+    <nav class="bg-indigo-500 p-2 shadow-md">
+        <div class="flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">서리단내과의원 검사등록시스템</h1>
+            <div class="flex items-center">
+                <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 메인 콘텐츠 좌우 분할 -->
+    <div class="container mx-auto mt-6 flex">
+        <!-- 왼쪽 섹션: 마약류 재고 목록 -->
+        <div class="w-1/2 p-4 bg-white rounded shadow-md mr-4">
+            <h2 class="text-lg font-bold mb-4">마약류 재고 목록</h2>
+            <!-- 마약류 목록 테이블 -->
+            <table class="min-w-full bg-white border">
+                <thead>
+                    <tr>
+                        <th class="py-2">제품명</th>
+                        <th class="py-2">성분명</th>
+                        <th class="py-2">일련번호</th>
+                        <th class="py-2">앰플 용량 (mL)</th>
+                        <th class="py-2">총 앰플 수량</th>
+                        <th class="py-2">잔여 앰플 수량</th>
+                    </tr>
+                </thead>
+                <tbody id="마약류테이블">
+                    <!-- Firebase에서 로드된 데이터가 여기에 표시됩니다 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 오른쪽 섹션: 마약류 기록 추가 및 엑셀 업로드 -->
+        <div class="w-1/2 p-4 bg-white rounded shadow-md">
+            <h2 class="text-lg font-bold mb-4">마약류 추가</h2>
+            <div class="grid grid-cols-1 gap-4">
+                <div>
+                    <label class="block">제품명</label>
+                    <input id="제품명" type="text" class="w-full px-3 py-2 border rounded" placeholder="제품명 입력">
+                </div>
+                <div>
+                    <label class="block">성분명</label>
+                    <input id="성분명" type="text" class="w-full px-3 py-2 border rounded" placeholder="성분명 입력">
+                </div>
+                <div>
+                    <label class="block">일련번호</label>
+                    <input id="일련번호" type="text" class="w-full px-3 py-2 border rounded" placeholder="일련번호 입력">
+                </div>
+                <div>
+                    <label class="block">앰플 용량 (mL)</label>
+                    <input id="앰플용량" type="number" step="0.01" class="w-full px-3 py-2 border rounded" placeholder="용량 입력">
+                </div>
+                <div>
+                    <label class="block">총 앰플 수량</label>
+                    <input id="총앰플수량" type="number" class="w-full px-3 py-2 border rounded" placeholder="총 수량 입력">
+                </div>
+                <div>
+                    <label class="block">잔여 앰플 수량</label>
+                    <input id="잔여앰플수량" type="number" class="w-full px-3 py-2 border rounded" placeholder="잔여 수량 입력">
+                </div>
+            </div>
+            <button onclick="마약류추가()" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded">추가</button>
+
+            <!-- 엑셀 파일 업로드 -->
+            <h2 class="text-lg font-bold mt-8 mb-4">엑셀 업로드</h2>
+            <input type="file" id="엑셀파일" accept=".xlsx, .xls" class="mb-4">
+            <button onclick="엑셀업로드()" class="bg-green-500 text-white px-4 py-2 rounded">업로드</button>
+        </div>
+    </div>
+</body>
+</html>
