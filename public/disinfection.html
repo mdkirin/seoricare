@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script type="module" src="./disinfection.js"></script>
     <style>
-        /* 공통 스타일 적용 */
         #custom-alert {
             position: fixed;
             top: 20px;
@@ -42,7 +41,9 @@
     </style>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
-    <!-- 상단바 -->
+    <div id="custom-alert">
+        <span id="alert-message"></span>
+    </div>
     <nav class="bg-indigo-500 p-2 shadow-md">
         <div class="flex justify-between items-center">
             <h1 class="text-white text-2xl font-bold">내시경 세척소독 관리 시스템</h1>
@@ -53,11 +54,8 @@
         </div>
     </nav>
 
-    <!-- 메인 콘텐츠 좌우 분할 -->
     <div class="container mx-auto mt-4 px-4 flex" style="max-width: 100%; height: calc(100vh - 6rem);">
-        <!-- 왼쪽 섹션: 소독약 내역 목록 (2/3 비율) -->
         <div class="w-2/3 p-4 bg-white rounded shadow-md mr-4 flex flex-col" style="height: 100%;">
-            <!-- 소독약 내역 테이블 -->
             <h2 class="text-lg font-bold mb-4">소독약 관리 내역</h2>
             <div class="flex-grow overflow-auto">
                 <table class="min-w-full bg-white border text-center">
@@ -77,18 +75,14 @@
                         </tr>
                     </thead>
                     <tbody id="소독약테이블">
-                        <!-- 소독약 관리 데이터 -->
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- 오른쪽 섹션: 소독약 추가 및 소독 기록 입력 영역 (1/3 비율) -->
         <div class="w-1/3 p-4 bg-white rounded shadow-md overflow-auto">
-            <!-- 소독약 기록 폼 -->
             <h2 class="text-lg font-bold mb-4">소독약 관리 기록</h2>
             <div class="grid grid-cols-1 gap-4">
-                <!-- 공통 폼 -->
                 <div>
                     <label class="block">일자</label>
                     <input id="일자" type="date" class="w-full px-3 py-2 border rounded">
@@ -103,12 +97,11 @@
                     </select>
                 </div>
 
-                <!-- 입고 폼 -->
                 <div id="입고폼" class="hidden">
                     <div>
                         <label class="block">제품명</label>
                         <div id="제품명-container">
-                            <select id="제품명" class="w-full px-3 py-2 border rounded" onchange="입력변경('제품명')">
+                            <select id="제품명" class="w-full px-3 py-2 border rounded" onchange="입력폼변경('제품명')">
                                 <option value="">제품명 선택</option>
                             </select>
                             <input id="제품명-input" type="text" class="w-full px-3 py-2 border rounded hidden" placeholder="제품명 입력">
@@ -121,7 +114,7 @@
                     <div>
                         <label class="block">입고수량</label>
                         <div id="입고수량-container">
-                            <select id="입고수량" class="w-full px-3 py-2 border rounded" onchange="입력변경('입고수량')">
+                            <select id="입고수량" class="w-full px-3 py-2 border rounded" onchange="입력폼변경('입고수량')">
                                 <option value="">입고수량 선택</option>
                             </select>
                             <input id="입고수량-input" type="number" class="w-full px-3 py-2 border rounded hidden" placeholder="입고 수량 입력">
@@ -129,7 +122,6 @@
                     </div>
                 </div>
 
-                <!-- 교체 폼 -->
                 <div id="교체폼" class="hidden">
                     <div>
                         <label class="block">제품명</label>
@@ -141,12 +133,11 @@
                     </div>
                 </div>
 
-                <!-- 소독 폼 -->
                 <div id="소독폼" class="hidden">
                     <div>
                         <label class="block">내시경모델</label>
                         <div id="내시경모델-container">
-                            <select id="내시경모델" class="w-full px-3 py-2 border rounded" onchange="입력변경('내시경모델')">
+                            <select id="내시경모델" class="w-full px-3 py-2 border rounded" onchange="입력폼변경('내시경모델')">
                                 <option value="">내시경모델 선택</option>
                             </select>
                             <input id="내시경모델-input" type="text" class="w-full px-3 py-2 border rounded hidden" placeholder="내시경 모델 입력">
@@ -159,7 +150,7 @@
                     <div>
                         <label class="block">유효농도</label>
                         <div id="유효농도-container">
-                            <select id="유효농도" class="w-full px-3 py-2 border rounded" onchange="입력변경('유효농도')">
+                            <select id="유효농도" class="w-full px-3 py-2 border rounded" onchange="입력폼변경('유효농도')">
                                 <option value="">유효농도 선택</option>
                             </select>
                             <input id="유효농도-input" type="text" class="w-full px-3 py-2 border rounded hidden" placeholder="유효농도 입력">
@@ -168,34 +159,30 @@
                     <div>
                         <label class="block">세척기번호</label>
                         <div id="세척기번호-container">
-                            <select id="세척기번호" class="w-full px-3 py-2 border rounded" onchange="입력변경('세척기번호')">
+                            <select id="세척기번호" class="w-full px-3 py-2 border rounded" onchange="입력폼변경('세척기번호')">
                                 <option value="">세척기번호 선택</option>
                             </select>
                             <input id="세척기번호-input" type="text" class="w-full px-3 py-2 border rounded hidden" placeholder="세척기번호 입력">
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <!-- 버튼 그룹 -->
             <div class="mt-4 flex space-x-2">
-                <button id="추가버튼" onclick="소독약기록추가()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded">추가</button>
-                <button id="수정버튼" onclick="소독약기록수정()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded hidden">수정</button>
-                <button id="삭제버튼" onclick="소독약기록삭제()" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded hidden">삭제</button>
-                <button id="초기화버튼" onclick="입력필드초기화()" class="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded">초기화</button>
+                <button id="추가버튼" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded">추가</button>
+                <button id="수정버튼" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded hidden">수정</button>
+                <button id="삭제버튼" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded hidden">삭제</button>
+                <button id="초기화버튼" class="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded" onclick="clearForm()">초기화</button>
             </div>
         </div>
     </div>
 
     <script>
         function 폼전환(value) {
-            // 모든 폼 숨기기
             document.getElementById('입고폼').classList.add('hidden');
             document.getElementById('교체폼').classList.add('hidden');
             document.getElementById('소독폼').classList.add('hidden');
 
-            // 선택한 값에 따라 폼 표시
             if (value === '입고') {
                 document.getElementById('입고폼').classList.remove('hidden');
             } else if (value === '교체') {
@@ -205,20 +192,17 @@
             }
         }
 
-        function 입력변경(field) {
+        function 입력폼변경(field) {
             const select = document.getElementById(field);
             const input = document.getElementById(field + '-input');
-
-            // '직접입력'을 선택한 경우
             if (select.value === '직접입력') {
-                select.classList.add('hidden');  // 드롭다운 숨기기
-                input.classList.remove('hidden'); // 텍스트 입력 보이기
+                select.classList.add('hidden');
+                input.classList.remove('hidden');
             } else {
-                select.classList.remove('hidden');  // 드롭다운 보이기
-                input.classList.add('hidden');  // 텍스트 입력 숨기기
+                select.classList.remove('hidden');
+                input.classList.add('hidden');
             }
         }
-
     </script>
 </body>
 </html>
