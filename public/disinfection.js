@@ -1,279 +1,8 @@
-import { db, collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from './firebase.js';
+import { db, collection, addDoc, getDocs, updateDoc, doc } from './firebase.js';  // Firebase 관련 모듈 가져오기
 
 // Firestore 컬렉션 참조
 const disinfectionCollection = collection(db, '내시경세척소독');
 let selectedRecordId = null;
-
-// Firestore에서 각 필드 값을 로드하여 드롭다운에 추가
-async function loadDropdownData() {
-    const querySnapshot = await getDocs(disinfectionCollection);
-
-    const productNames = new Set();
-    const endoscopeModels = new Set();
-    const concentrations = new Set();
-    const washerNumbers = new Set();
-    const stockQuantities = new Set();
-
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (data.제품명) productNames.add(data.제품명);
-        if (data.내시경모델) endoscopeModels.add(data.내시경모델);
-        if (data.유효농도) concentrations.add(data.유효농도);
-        if (data.세척기번호) washerNumbers.add(data.세척기번호);
-        if (data.입고수량) stockQuantities.add(data.입고수량);
-    });
-
-    addOptionsToDropdown('제품명', productNames);
-    addOptionsToDropdown('내시경모델', endoscopeModels);
-    addOptionsToDropdown('유효농도', concentrations);
-    addOptionsToDropdown('세척기번호', washerNumbers);
-    addOptionsToDropdown('입고수량', stockQuantities);
-}
-
-// 드롭다운에 옵션 추가 함수
-function addOptionsToDropdown(fieldId, optionsSet) {
-    const select = document.getElementById(fieldId);
-    select.innerHTML = ''; 
-    if (optionsSet.size === 0) {
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = fieldId + ' 선택';
-        select.appendChild(defaultOption);
-    }
-
-    optionsSet.forEach(value => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        select.appendChild(option);
-    });
-
-    const directInputOption = document.createElement('option');
-    directInputOption.value = '직접입력';
-    directInputOption.textContent = '직접입력';
-    select.appendChild(directInputOption);
-}
-
-// 테이블에 데이터 로드
-async function loadDisinfectionRecords() {
-    const querySnapshot = await getDocs(disinfectionCollection);
-    const tbody = document.getElementById('소독약테이블');
-    tbody.innerHTML = ''; 
-
-    querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        const row = document.createElement('tr');
-        row.dataset.id = doc.id;
-        row.innerHTML = `
-            <td>${data.일자}</td>
-            <td>${data.내용}</td>
-            <td>${data.제품명 || '-'}</td>
-            <td>${data.유효기간 || '-'}</td>
-            <td>${data.내시경모델 || '-'}</td>
-            <td>${data.환자명 || '-'}</td>
-            <td>${data.유효농도 || '-'}</td>
-            <td>${data.세척기번호 || '-'}</td>
-            <td>${data.입고수량 || '-'}</td>
-            <td>${data.사용량 || '-'}</td>
-            <td>${data.잔여량 || '-'}</td>
-        `;
-        row.onclick = () => selectRecord(doc.id, data);
-        tbody.appendChild(row);
-    });
-}
-
-// 레코드 선택 시 폼에 값 로드
-function selectRecord(id, data) {
-    selectedRecordId = id; // 선택된 레코드 ID 저장
-    document.getElementById('일자').value = data.일자;
-    document.getElementById('내용').value = data.내용; // 내용 선택
-
-    // '내용' 필드에 따라 자동으로 폼 전환
-    폼전환(data.내용); // 자동으로 '입고', '교체', '소독'에 맞게 전환
-
-    // '내용'에 맞는 값을 로드
-    if (data.내용 === '입고') {
-        document.getElementById('제품명').value = data.제품명;
-        document.getElementById('유효기간').value = data.유효기간;
-        document.getElementById('입고수량').value = data.입고수량;
-    } else if (data.내용 === '교체') {
-        document.getElementById('제품명-교체').value = data.제품명;
-        document.getElementById('사용량').value = data.사용량;
-    } else if (data.내용 === '소독') {
-        document.getElementById('내시경모델').value = data.내시경모델;
-        document.getElementById('환자명').value = data.환자명;
-        document.getElementById('유효농도').value = data.유효농도;
-        document.getElementById('세척기번호').value = data.세척기번호;
-    }
-
-    // 수정 및 삭제 버튼 활성화
-    document.getElementById('수정버튼').classList.remove('hidden');
-    document.getElementById('삭제버튼').classList.remove('hidden');
-    document.getElementById('추가버튼').classList.add('hidden');
-}
-
-// 소독약 기록 추가
-async function 소독약기록추가() {
-    const 내용 = document.getElementById('내용').value;
-    const 일자 = document.getElementById('일자').value;
-
-    const newData = { 일자, 내용 };
-
-    if (내용 === '입고') {
-        newData.제품명 = getInputValue('제품명');
-        newData.유효기간 = document.getElementById('유효기간').value;
-        newData.입고수량 = parseInt(getInputValue('입고수량'), 10);
-        newData.잔여량 = newData.입고수량;
-    } else if (내용 === '교체') {
-        newData.제품명 = document.getElementById('제품명-교체').value;
-        newData.사용량 = parseInt(document.getElementById('사용량').value, 10);
-        newData.잔여량 = -(newData.사용량);
-    } else if (내용 === '소독') {
-        newData.내시경모델 = getInputValue('내시경모델');
-        newData.환자명 = document.getElementById('환자명').value;
-        newData.유효농도 = getInputValue('유효농도');
-        newData.세척기번호 = getInputValue('세척기번호');
-    }
-
-    try {
-        await addDoc(disinfectionCollection, newData);
-        showalert('소독약 기록이 추가되었습니다.'); // 경고창 표시
-        loadDisinfectionRecords(); // 테이블 업데이트
-        clearForm();
-    } catch (error) {
-        console.error('Error adding document: ', error);
-    }
-}
-
-// 레코드 수정
-async function 소독약기록수정() {
-    if (!selectedRecordId) {
-        alert("수정할 항목을 선택하세요.");
-        return;
-    }
-
-    const docRef = doc(db, '내시경세척소독', selectedRecordId);
-    const updatedData = {
-        일자: document.getElementById('일자').value,
-        내용: document.getElementById('내용').value,
-        제품명: getInputValue('제품명'),
-        유효기간: document.getElementById('유효기간').value,
-        입고수량: parseInt(getInputValue('입고수량'), 10),
-        내시경모델: getInputValue('내시경모델'),
-        환자명: document.getElementById('환자명').value,
-        유효농도: getInputValue('유효농도'),
-        세척기번호: getInputValue('세척기번호'),
-    };
-
-    try {
-        await updateDoc(docRef, updatedData);
-        showalert('소독약 기록이 수정되었습니다.'); // 경고창 표시
-        loadDisinfectionRecords(); // 테이블 업데이트
-        clearForm();
-    } catch (error) {
-        console.error('Error updating document: ', error);
-    }
-}
-
-// 레코드 삭제 함수
-async function 소독약기록삭제() {
-    if (!selectedRecordId) {
-        alert("삭제할 항목을 선택하세요.");
-        return;
-    }
-
-    const docRef = doc(db, '내시경세척소독', selectedRecordId);
-
-    try {
-        await deleteDoc(docRef);  // Firestore에서 레코드 삭제
-        showalert('소독약 기록이 삭제되었습니다.'); // 경고창 표시
-        loadDisinfectionRecords();  // 테이블 업데이트
-        clearForm();  // 폼 초기화
-    } catch (error) {
-        console.error('Error deleting document: ', error);
-    }
-}
-
-// 폼 초기화
-function clearForm() {
-    selectedRecordId = null;
-    document.getElementById('일자').value = '';
-    document.getElementById('내용').value = '';
-    document.getElementById('제품명').value = '';
-    document.getElementById('유효기간').value = '';
-    document.getElementById('입고수량').value = '';
-    document.getElementById('내시경모델').value = '';
-    document.getElementById('환자명').value = '';
-    document.getElementById('유효농도').value = '';
-    document.getElementById('세척기번호').value = '';
-
-    document.getElementById('수정버튼').classList.add('hidden');
-    document.getElementById('삭제버튼').classList.add('hidden');
-    document.getElementById('추가버튼').classList.remove('hidden');
-}
-
-// 입력 값 가져오기 함수 (드롭다운/텍스트 입력 지원)
-function getInputValue(field) {
-    const select = document.getElementById(field);
-    const input = document.getElementById(field + '-input');
-    return select.classList.contains('hidden') ? input.value : select.value;
-}
-
-// 정렬 기능 추가
-function 정렬(field) {
-    const table = document.getElementById('소독약테이블');
-    const rows = Array.from(table.querySelectorAll('tr'));
-
-    const headerRow = rows.shift(); 
-
-    const sortedRows = rows.sort((a, b) => {
-        const aValue = a.querySelector(`td:nth-child(${getColumnIndex(field)})`).textContent.trim();
-        const bValue = b.querySelector(`td:nth-child(${getColumnIndex(field)})`).textContent.trim();
-        
-        if (!isNaN(aValue) && !isNaN(bValue)) {
-            return parseFloat(aValue) - parseFloat(bValue);
-        }
-        return aValue.localeCompare(bValue);
-    });
-
-    table.innerHTML = '';
-    table.appendChild(headerRow);
-    sortedRows.forEach(row => table.appendChild(row));
-}
-
-// 열의 인덱스 반환
-function getColumnIndex(field) {
-    const columns = {
-        '일자': 1,
-        '내용': 2,
-        '제품명': 3,
-        '유효기간': 4,
-        '내시경모델': 5,
-        '환자명': 6,
-        '유효농도': 7,
-        '세척기번호': 8,
-        '입고수량': 9,
-        '사용량': 10,
-        '잔여량': 11
-    };
-    return columns[field];
-}
-
-// 전역으로 함수 노출
-window.clearForm = clearForm;
-window.소독약기록추가 = 소독약기록추가;
-window.소독약기록수정 = 소독약기록수정;
-window.소독약기록삭제 = 소독약기록삭제;
-window.정렬 = 정렬;
-window.onload = async () => {
-    await loadDropdownData();
-    await loadDisinfectionRecords();
-};
-
-// 이벤트 리스너 추가
-document.getElementById('추가버튼').addEventListener('click', 소독약기록추가);
-document.getElementById('수정버튼').addEventListener('click', 소독약기록수정);
-document.getElementById('삭제버튼').addEventListener('click', 소독약기록삭제);
 
 // 경고창 표시 함수
 function showalert(message, duration = 3000) {
@@ -292,5 +21,202 @@ function showalert(message, duration = 3000) {
     }
 }
 
-// 전역 노출
-window.showalert = showalert;
+// 폼 전환 함수 (입고/교체 선택 시 폼 표시)
+function 폼전환(value) {
+    const 입고폼 = document.getElementById('입고폼');
+    const 교체폼 = document.getElementById('교체폼');
+    const 입고버튼 = document.getElementById('입고버튼');
+    const 교체버튼 = document.getElementById('교체버튼');
+
+    if (value === '입고') {
+        loadProductNames(); // 제품명 드롭다운 로드
+        입고폼.classList.remove('hidden');
+        교체폼.classList.add('hidden');
+        입고버튼.classList.add('active-btn'); // 입고 버튼 활성화
+        교체버튼.classList.remove('active-btn'); // 교체 버튼 비활성화
+    } else if (value === '교체') {
+        loadDisinfectionOptions(); // 교체에 사용될 소독약 로드
+        입고폼.classList.add('hidden');
+        교체폼.classList.remove('hidden');
+        입고버튼.classList.remove('active-btn'); // 입고 버튼 비활성화
+        교체버튼.classList.add('active-btn'); // 교체 버튼 활성화
+    } else {
+        입고폼.classList.add('hidden');
+        교체폼.classList.add('hidden');
+        입고버튼.classList.remove('active-btn');
+        교체버튼.classList.remove('active-btn');
+    }
+}
+
+// 소독약 재고 로드 함수
+async function loadDisinfectionRecords() {
+    const querySnapshot = await getDocs(disinfectionCollection);
+    const 재고테이블 = document.getElementById('소독약재고테이블');
+    재고테이블.innerHTML = ''; // 기존 내용 지우기
+
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const row = document.createElement('tr');
+        row.dataset.id = doc.id;
+        row.innerHTML = `
+            <td>${data.입고일자}</td>
+            <td>${data.제품명}</td>
+            <td>${data.유효기간}</td>
+            <td>${data.사용여부}</td>
+            <td>${data.사용일자 || '-'}</td>
+        `;
+        재고테이블.appendChild(row);
+    });
+
+    // 소독약 교체 폼의 소독약 선택 옵션 업데이트
+    updateDisinfectionOptions(querySnapshot); // updateDisinfectionOptions 함수 호출
+}
+
+// 소독약 선택 드롭다운 옵션 업데이트 (교체할 소독약 선택)
+function updateDisinfectionOptions(querySnapshot) {
+    const 소독약선택 = document.getElementById('소독약선택');
+    소독약선택.innerHTML = '<option value="">선택하세요</option>'; // 기본 선택
+
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.사용여부 === '미사용') {  // 미사용 항목만 표시
+            const option = document.createElement('option');
+            option.value = doc.id; // 소독약 ID
+            option.textContent = `${data.제품명} (유효기간: ${data.유효기간})`;
+            소독약선택.appendChild(option);
+        }
+    });
+}
+
+// 소독약 교체 시 사용할 소독약 불러오기 (폼 전환 시 사용)
+async function loadDisinfectionOptions() {
+    const 소독약선택 = document.getElementById('소독약선택');
+    소독약선택.innerHTML = '<option value="">선택하세요</option>';
+
+    try {
+        const querySnapshot = await getDocs(disinfectionCollection);
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.사용여부 === '미사용') {  // 미사용 상태인 소독약만 불러오기
+                const option = document.createElement('option');
+                option.value = doc.id;
+                option.textContent = `${data.제품명} (유효기간: ${data.유효기간})`;
+                소독약선택.appendChild(option);
+            }
+        });
+    } catch (error) {
+        console.error('Error loading disinfection options: ', error);
+    }
+}
+
+// Firestore에서 제품명 로드 후 드롭다운에 추가하는 함수
+async function loadProductNames() {
+    const querySnapshot = await getDocs(disinfectionCollection);
+    const productNames = new Set(); // 중복 제거를 위해 Set 사용
+
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log(data); // 데이터 로드 확인용 콘솔 출력
+        if (data.제품명) {
+            productNames.add(data.제품명); // 제품명 추가
+        }
+    });
+
+    const productDropdown = document.getElementById('제품명');
+    productDropdown.innerHTML = ''; // 기존 옵션 초기화
+
+    productNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        productDropdown.appendChild(option);
+    });
+
+    // 직접입력 옵션 추가
+    const directInputOption = document.createElement('option');
+    directInputOption.value = '직접입력';
+    directInputOption.textContent = '직접입력';
+    productDropdown.appendChild(directInputOption);
+}
+
+// 소독약 입고 함수 (박스 당 4개 항목 생성)
+async function 소독약입고() {
+    const 입고일자 = document.getElementById('입고일자').value;
+    const 제품명 = document.getElementById('제품명').value;
+    const 유효기간 = document.getElementById('유효기간').value;
+    const 입고수량 = parseInt(document.getElementById('입고수량').value, 10); // 박스 단위 입고수량
+
+    if (!입고일자 || !제품명 || !유효기간 || isNaN(입고수량)) {
+        showalert('모든 필드를 입력하세요.');
+        return;
+    }
+
+    const 항목생성수 = 입고수량 * 4; // 한 박스당 4개의 항목 생성
+
+    try {
+        for (let i = 0; i < 항목생성수; i++) {
+            const newData = {
+                입고일자,
+                제품명,
+                유효기간,
+                사용여부: '미사용',
+                사용일자: null
+            };
+
+            await addDoc(disinfectionCollection, newData); // Firestore에 항목 저장
+        }
+
+        showalert(`${항목생성수}개의 소독약 항목이 입고되었습니다.`);
+        loadDisinfectionRecords(); // 테이블 업데이트
+        clearForm(); // 폼 초기화
+    } catch (error) {
+        console.error('Error adding document: ', error);
+    }
+}
+
+// 소독약 교체 함수
+async function 소독약교체() {
+    const 교체일자 = document.getElementById('교체일자').value;
+    const 소독약ID = document.getElementById('소독약선택').value;  // 선택된 소독약의 ID
+
+    if (!소독약ID) {
+        alert("사용할 소독약을 선택하세요.");
+        return;
+    }
+
+    const docRef = doc(db, '내시경세척소독', 소독약ID);
+
+    try {
+        await updateDoc(docRef, {
+            사용여부: '사용됨',
+            사용일자: 교체일자
+        });
+        showalert('소독약이 교체되었습니다.');
+        loadDisinfectionRecords();  // 테이블 업데이트
+        clearForm();  // 폼 초기화
+    } catch (error) {
+        console.error('Error updating document: ', error);
+    }
+}
+
+// 폼 초기화 함수
+function clearForm() {
+    document.getElementById('입고일자').value = '';
+    document.getElementById('제품명').value = '';
+    document.getElementById('유효기간').value = '';
+    document.getElementById('입고수량').value = '';
+    document.getElementById('교체일자').value = '';
+    document.getElementById('소독약선택').value = '';
+}
+
+// 페이지 로드 시 데이터 로드
+window.onload = async () => {
+    await loadDisinfectionRecords(); // 소독약 재고 테이블 로드
+    await loadProductNames(); // 페이지 로드 시 제품명 로드
+};
+
+// 전역으로 함수 노출
+window.소독약입고 = 소독약입고;
+window.소독약교체 = 소독약교체;
+window.폼전환 = 폼전환;
+window.loadDisinfectionOptions = loadDisinfectionOptions;
