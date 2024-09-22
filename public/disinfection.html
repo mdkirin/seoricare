@@ -6,6 +6,8 @@
     <title>소독약 재고 및 세척일지 관리</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script type="module" src="./disinfection.js"></script>
     <style>
         /* 경고창 스타일 */
@@ -115,6 +117,85 @@
             color: white;
             margin-left: 1rem;
         }
+
+        .sort-icon {
+            font-size: 18px;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+        th:hover {
+            background-color: #f0f0f0;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+
+        #세척일지테이블 {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        #세척일지테이블 th, #세척일지테이블 td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        #세척일지테이블 th {
+            background-color: #f2f2f2;
+            position: relative;
+        }
+
+        #세척일지테이블 tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        #세척일지테이블 tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .th-content {
+            position: relative;
+            padding-right: 24px; /* 아이콘 너비 + 여백 */
+            display: inline-block;
+        }
+
+        .sort-icon {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            width: 18px; /* 아이콘의 고정 너비 */
+            height: 18px; /* 아이콘의 고정 높이 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9AA0A6; /* 기본 색상 (연한 회색) */
+        }
+
+        th.sort-asc .sort-icon,
+        th.sort-desc .sort-icon {
+            color: #1A73E8; /* 정렬 활성화 시 색상 (파란색) */
+        }
+
+        th {
+            white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+        }
+
+        .editable-cell {
+            background-color: #f0f0f0;
+        }
+
+        .editable-cell input {
+            width: 100%;
+            padding: 2px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
@@ -142,14 +223,33 @@
                 <div class="w-full md:w-1/2 px-2 mb-4 h-full overflow-auto">
                     <div class="bg-white rounded shadow-md p-4 h-full">
                         <h2 class="text-lg font-bold mb-4">세척일지</h2>
-                        <table id="세척일지테이블" class="min-w-full bg-white">
+                        <table id="세척일지테이블" class="min-w-full bg-white border border-gray-300">
                             <thead>
-                                <tr>
-                                    <th onclick="sortTable(0)">일자</th>
-                                    <th onclick="sortTable(1)">활동구분</th>
-                                    <th onclick="sortTable(2)">내용</th>
-                                    <th onclick="sortTable(3)">수량</th>
-                                    <th onclick="sortTable(4)">비고</th>
+                                <tr class="bg-gray-100">
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        <span class="th-content">일자</span>
+                                        <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        <span class="th-content">활동구분</span>
+                                        <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        <span class="th-content">내용</span>
+                                        <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        <span class="th-content">수량</span>
+                                        <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        <span class="th-content">잔여량</span>
+                                        <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        <span class="th-content">비고</span>
+                                        <span class="material-icons sort-icon">sort</span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -163,14 +263,27 @@
                 <div class="w-full md:w-1/2 px-2 h-full flex flex-col">
                     <div class="bg-white rounded shadow-md p-4 mb-4 flex-1 overflow-auto">
                         <h2 class="text-lg font-bold mb-4">소독약 재고</h2>
-                        <table id="소독약재고테이블" class="min-w-full bg-white">
+                        <table id="소독약재고테이블" class="min-w-full bg-white border border-gray-300">
                             <thead>
-                                <tr>
-                                    <th onclick="sortTable(0)">입고일자</th>
-                                    <th onclick="sortTable(1)">제품명</th>
-                                    <th onclick="sortTable(2)">유효기간</th>
-                                    <th onclick="sortTable(3)">사용여부</th>
-                                    <th onclick="sortTable(4)">사용일자</th>
+                                <tr class="bg-gray-100">
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        입고일자 <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        제품명 <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        유효기간 <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        사용여부 <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        사용일자 <span class="material-icons sort-icon">sort</span>
+                                    </th>
+                                    <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer">
+                                        잔여량 <span class="material-icons sort-icon">sort</span>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -180,10 +293,11 @@
                         <div id="총잔여량" class="mt-4 font-bold"></div>
                     </div>
                     
-                    <!-- 입고/교체 버튼 -->
+                    <!-- 입고/교체/수정 버튼 -->
                     <div class="flex justify-end mt-4">
-                        <button id="입고버튼" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="open입고모달()">입고</button>
-                        <button id="교체버튼" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="open교체모달()">교체</button>
+                        <button id="입고버튼" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2">입고</button>
+                        <button id="교체버튼" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-2">교체</button>
+                        <button id="수정버튼" class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded">수정</button>
                     </div>
                 </div>
             </div>
@@ -212,12 +326,12 @@
                 <label for="유효기간" class="block font-bold mb-2">유효기간:</label>
                 <input type="date" id="유효기간" class="w-full p-2 border rounded mb-4" required>
 
-                <label for="입고수량" class="block font-bold mb-2">입고수량 (bottles):</label>
+                <label for="입고수량" class="block font-bold mb-2">입고수량 (병):</label>
                 <input type="number" id="입고수량" class="w-full p-2 border rounded mb-4" required>
             </div>
             <div class="modal-footer">
-                <button onclick="소독약입고()" class="px-4 py-2 bg-blue-500 text-white rounded">입고</button>
-                <button onclick="close입고모달()" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
+                <button id="소독약입고버튼" class="px-4 py-2 bg-blue-500 text-white rounded">입고</button>
+                <button id="입고모달닫기버튼" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
             </div>
         </div>
     </div>
@@ -239,8 +353,41 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button onclick="소독약교체()" class="px-4 py-2 bg-blue-500 text-white rounded">교체</button>
-                <button onclick="close교체모달()" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
+                <button id="소독약교체버튼" class="px-4 py-2 bg-blue-500 text-white rounded">교체</button>
+                <button id="교체모달닫기버튼" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 수정 모달 추가 -->
+    <div id="수정모달" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 800px;">
+            <div class="modal-header">
+                <h3>소독약 수정</h3>
+                <span class="material-icons cursor-pointer" onclick="close수정모달()">close</span>
+            </div>
+            <div class="modal-body">
+                <table id="수정테이블" class="min-w-full bg-white border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">선택</th>
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">입고일자</th>
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">제품명</th>
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">유효기간</th>
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">사용여부</th>
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">사용일자</th>
+                            <th class="px-4 py-2 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">잔여량</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 데이터는 JavaScript에서 동적으로 추가됩니다 -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button id="수정완료버튼" class="px-4 py-2 bg-blue-500 text-white rounded">수정완료</button>
+                <button id="삭제버튼" class="px-4 py-2 bg-red-500 text-white rounded ml-2">삭제</button>
+                <button id="수정모달닫기버튼" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
             </div>
         </div>
     </div>
