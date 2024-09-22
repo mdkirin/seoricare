@@ -36,99 +36,211 @@
         .selected-row {
             background-color: #D1E7FF; /* 선택된 행의 색상 */
         }
+
+        /* 제품명 섹션을 가로로 정렬 */
+        .제품명-섹션 {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .제품명-섹션 label,
+        .제품명-섹션 select,
+        .제품명-섹션 input {
+            margin-bottom: 10px;
+        }
+
+        /* 테이블 헤더 스타일 추가 */
+        th {
+            cursor: pointer;
+            background-color: #f1f1f1;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        /* 모달 스타일 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none; /* 기본적으로 숨김 */
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            margin-top: 20px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        /* 상단바 스타일 추가 */
+        .navbar {
+            background-color: #4a5568;
+            padding: 1rem;
+        }
+        .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .navbar-menu {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .navbar-item {
+            color: white;
+            margin-left: 1rem;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
-    <!-- 경고창 요소 -->
+    <!-- 알림 요소 -->
     <div id="custom-alert">
         <span id="alert-message"></span>
     </div>
 
-    <nav class="bg-indigo-500 p-2 shadow-md flex justify-between">
-        <h1 class="text-white text-2xl">소독약 재고 및 세척일지 관리</h1>
-        <div class="flex items-center">
-            <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
-            <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded hidden">로그아웃</button>
+    <!-- 상단바 -->
+    <nav class="bg-indigo-500 p-2 shadow-md">
+        <div class="flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">서리단내과의원 검사등록시스템</h1>
+            <div class="flex items-center">
+                <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
+            </div>
         </div>
     </nav>
 
-    <div class="container mx-auto mt-4 px-4 flex" style="max-width: 100%; height: calc(100vh - 6rem);">
-        <!-- 소독약 재고 테이블 -->
-        <div class="w-2/3 p-4 bg-white rounded shadow-md mr-4">
-            <h2 class="text-lg font-bold mb-4">소독약 재고</h2>
-            <table class="min-w-full bg-white border text-center">
-                <thead>
-                    <tr>
-                        <th>입고일자</th>
-                        <th>제품명</th>
-                        <th>유효기간</th>
-                        <th>사용여부</th>
-                        <th>사용일자</th>
-                    </tr>
-                </thead>
-                <tbody id="소독약재고테이블"></tbody>
-            </table>
-        </div>
-
-        <!-- 세척일지 테이블 -->
-        <div class="w-2/3 p-4 bg-white rounded shadow-md mr-4">
-            <h2 class="text-lg font-bold mb-4">세척일지</h2>
-            <table class="min-w-full bg-white border text-center">
-                <thead>
-                    <tr>
-                        <th>일자</th>
-                        <th>수검자명</th>
-                        <th>내시경일련번호</th>
-                        <th>세척기번호</th>
-                        <th>유효농도</th>
-                        <th>입고</th>
-                        <th>교체</th>
-                        <th>잔여량</th>
-                    </tr>
-                </thead>
-                <tbody id="세척일지테이블"></tbody>
-            </table>
-        </div>
-
-        <!-- 우측 입력 섹션 -->
-        <div class="w-1/3 p-4 bg-white rounded shadow-md">
-            <h2 class="text-lg font-bold mb-4">입고/교체 기록</h2>
-            
-            <!-- 입고/교체 선택 버튼 -->
-            <div class="flex mb-4">
-                <button id="입고버튼" class="bg-gray-500 hover:bg-gray-700 text-white p-2 mr-2 rounded" onclick="폼전환('입고')">입고</button>
-                <button id="교체버튼" class="bg-gray-500 hover:bg-gray-700 text-white p-2 rounded" onclick="폼전환('교체')">교체</button>
-            </div>
-
-            <!-- 입고 섹션 -->
-            <div id="입고폼" class="hidden">
-                <label class="block font-bold mb-2">입고일자</label>
-                <input type="date" id="입고일자" class="w-full p-2 border rounded mb-4">
-                
-                <label class="block font-bold mb-2">제품명</label>
-                <select id="제품명" class="w-full p-2 border rounded mb-4"></select>
-                
-                <label class="block font-bold mb-2">유효기간</label>
-                <input type="date" id="유효기간" class="w-full p-2 border rounded mb-4">
-                
-                <label class="block font-bold mb-2">입고수량 (박스 단위)</label>
-                <input type="number" id="입고수량" class="w-full p-2 border rounded mb-4" placeholder="박스 단위로 입력하세요">
-                
-                <button class="bg-blue-500 text-white p-2 rounded" onclick="소독약입고()">입고</button>
-            </div>
-
-            <!-- 교체 섹션 -->
-            <div id="교체폼" class="hidden">
-                <label class="block font-bold mb-2">교체일자</label>
-                <input type="date" id="교체일자" class="w-full p-2 border rounded mb-4">
-
-                <!-- 선택된 소독약 정보 표시 -->
-                <div id="선택된소독약" class="mb-4 hidden">
-                    <label class="block font-bold mb-2">선택된 소독약</label>
-                    <p id="선택된소독약명"></p> <!-- 소독약명 표시 -->
+    <!-- 메인 컨츠 -->
+    <div class="flex-1 overflow-auto w-full" style="height: calc(100vh - 6rem);">
+        <div class="p-4 h-full w-full">
+            <div class="flex flex-wrap -mx-2 h-full">
+                <!-- 좌측: 세척일지 테이블 섹션 -->
+                <div class="w-full md:w-1/2 px-2 mb-4 h-full overflow-auto">
+                    <div class="bg-white rounded shadow-md p-4 h-full">
+                        <h2 class="text-lg font-bold mb-4">세척일지</h2>
+                        <table id="세척일지테이블" class="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">일자</th>
+                                    <th onclick="sortTable(1)">활동구분</th>
+                                    <th onclick="sortTable(2)">내용</th>
+                                    <th onclick="sortTable(3)">수량</th>
+                                    <th onclick="sortTable(4)">비고</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 데이터 로드 -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <button class="bg-blue-500 text-white p-2 rounded" onclick="소독약교체()">교체</button>
+                <!-- 우측: 재고 테이블 및 입고/교체 버튼 -->
+                <div class="w-full md:w-1/2 px-2 h-full flex flex-col">
+                    <div class="bg-white rounded shadow-md p-4 mb-4 flex-1 overflow-auto">
+                        <h2 class="text-lg font-bold mb-4">소독약 재고</h2>
+                        <table id="소독약재고테이블" class="min-w-full bg-white">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(0)">입고일자</th>
+                                    <th onclick="sortTable(1)">제품명</th>
+                                    <th onclick="sortTable(2)">유효기간</th>
+                                    <th onclick="sortTable(3)">사용여부</th>
+                                    <th onclick="sortTable(4)">사용일자</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- 데이터 로드 -->
+                            </tbody>
+                        </table>
+                        <div id="총잔여량" class="mt-4 font-bold"></div>
+                    </div>
+                    
+                    <!-- 입고/교체 버튼 -->
+                    <div class="flex justify-end mt-4">
+                        <button id="입고버튼" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2" onclick="open입고모달()">입고</button>
+                        <button id="교체버튼" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onclick="open교체모달()">교체</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 입고 모달 추가 -->
+    <div id="입고모달" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>소독약 입고</h3>
+                <span class="material-icons cursor-pointer" onclick="close입고모달()">close</span>
+            </div>
+            <div class="modal-body">
+                <label for="입고일자" class="block font-bold mb-2">입고일자:</label>
+                <input type="date" id="입고일자" class="w-full p-2 border rounded mb-4" required>
+
+                <div class="제품명-섹션">
+                    <label for="제품명-dropdown" class="block font-bold mb-2">제품명:</label>
+                    <select id="제품명-dropdown" class="w-full p-2 border rounded mb-2">
+                        <!-- 옵션은 JavaScript에서 동적으로 추가됩니다 -->
+                    </select>
+                    <input type="text" id="제품명-직접입력" class="w-full p-2 border rounded mb-2" style="display: none;" placeholder="제품명 직접 입력">
+                </div>
+
+                <label for="유효기간" class="block font-bold mb-2">유효기간:</label>
+                <input type="date" id="유효기간" class="w-full p-2 border rounded mb-4" required>
+
+                <label for="입고수량" class="block font-bold mb-2">입고수량 (bottles):</label>
+                <input type="number" id="입고수량" class="w-full p-2 border rounded mb-4" required>
+            </div>
+            <div class="modal-footer">
+                <button onclick="소독약입고()" class="px-4 py-2 bg-blue-500 text-white rounded">입고</button>
+                <button onclick="close입고모달()" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 소독약 교체 모달 -->
+    <div id="교체모달" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 800px;">
+            <div class="modal-header">
+                <h3>소독약 교체</h3>
+                <span class="material-icons cursor-pointer" onclick="close교체모달()">close</span>
+            </div>
+            <div class="modal-body">
+                <label for="교체일자-모달" class="block font-bold mb-2">교체일자:</label>
+                <input type="date" id="교체일자-모달" class="w-full p-2 border rounded mb-4" required>
+
+                <label class="block font-bold mb-2">사용할 소독약을 선택하세요 (최대 2개):</label>
+                <div id="사용소독약리스트" class="mb-4 overflow-auto" style="max-height: 300px;">
+                    <!-- 테이블이 여기에 동적으로 추가됩니다 -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="소독약교체()" class="px-4 py-2 bg-blue-500 text-white rounded">교체</button>
+                <button onclick="close교체모달()" class="px-4 py-2 bg-gray-500 text-white rounded ml-2">취소</button>
             </div>
         </div>
     </div>
