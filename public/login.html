@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,27 +10,84 @@
     <script type="module" src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js"></script>
     <script src="./login.js" type="module" defer></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen">
-    <div class="w-full max-w-xs">
-        <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" id="loginForm">
-            <h2 class="mb-4 text-center text-2xl font-bold">로그인</h2>
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 text-sm font-bold mb-2">이메일</label>
-                <input type="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="이메일을 입력하세요">
+<body class="bg-gray-100">
+    <nav class="bg-indigo-500 p-4 shadow-md w-full">
+        <div class="flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">서리단내과의원</h1>
+            <div class="flex items-center">
+                <a href="index.html" class="text-white mr-4">홈</a>
+                <a href="scheduler.html" class="text-white mr-4">검사 예약</a>
+                <a href="endoscopy.html" class="text-white mr-4">내시경 관리</a>
+                <span id="userName" class="text-white mr-4"></span>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
             </div>
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 text-sm font-bold mb-2">비밀번호</label>
-                <input type="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="비밀번호를 입력하세요">
-            </div>
-            <div class="flex items-center justify-between">
-                <button type="button" id="loginBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    로그인
-                </button>
-                <button type="button" id="signUpBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
-                    회원가입
-                </button>
-            </div>
-        </form>
+        </div>
+    </nav>
+
+    <div class="flex items-center justify-center h-screen">
+        <div class="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
+            <h2 class="mb-6 text-center text-2xl font-bold text-gray-700">로그인</h2>
+            <form id="loginForm">
+                <div class="mb-4">
+                    <label for="email" class="block text-gray-600 text-sm font-semibold mb-2">이메일</label>
+                    <input type="email" id="email" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring focus:ring-indigo-300" placeholder="이메일을 입력하세요" required>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-gray-600 text-sm font-semibold mb-2">비밀번호</label>
+                    <input type="password" id="password" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring focus:ring-indigo-300" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="button" id="loginBtn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring focus:ring-blue-300">
+                        로그인
+                    </button>
+                    <button type="button" id="openSignUpModal" class="text-green-500 hover:underline">회원가입</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <!-- 회원가입 모달 -->
+    <div id="signupModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md">
+            <h2 class="mb-6 text-center text-2xl font-bold text-gray-700">회원가입</h2>
+            <form id="signupForm">
+                <div class="mb-4">
+                    <label for="name" class="block text-gray-600 text-sm font-semibold mb-2">이름</label>
+                    <input type="text" id="name" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring focus:ring-indigo-300" placeholder="이름을 입력하세요" required>
+                </div>
+                <div class="mb-4">
+                    <label for="signupEmail" class="block text-gray-600 text-sm font-semibold mb-2">이메일</label>
+                    <input type="email" id="signupEmail" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring focus:ring-indigo-300" placeholder="이메일을 입력하세요" required>
+                </div>
+                <div class="mb-4">
+                    <label for="signupPassword" class="block text-gray-600 text-sm font-semibold mb-2">비밀번호</label>
+                    <input type="password" id="signupPassword" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring focus:ring-indigo-300" placeholder="비밀번호를 입력하세요" required>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="button" id="signUpBtn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:ring focus:ring-green-300">
+                        회원가입
+                    </button>
+                    <button type="button" id="closeSignUpModal" class="text-red-500 hover:underline">취소</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 알림 요소 -->
+    <div id="custom-alert" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity duration-300">
+        <span id="alert-message"></span>
+    </div>
+
+    <script>
+        // 모달 열기
+        document.getElementById('openSignUpModal').addEventListener('click', () => {
+            document.getElementById('signupModal').classList.remove('hidden');
+        });
+
+        // 모달 닫기
+        document.getElementById('closeSignUpModal').addEventListener('click', () => {
+            document.getElementById('signupModal').classList.add('hidden');
+        });
+    </script>
 </body>
 </html>

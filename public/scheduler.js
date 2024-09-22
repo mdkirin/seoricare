@@ -1,5 +1,5 @@
 // firebase.js 모듈 임포트
-import { db, handleLogout, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onAuthStateChanged } from './firebase.js';
+import { db, collection, addDoc, getDocs, deleteDoc, doc, updateDoc} from './firebase.js';
 
 let calendar;
 let selectedEventId = null;
@@ -19,9 +19,32 @@ const 차트번호Input = document.getElementById('차트번호');
 const 메모Input = document.getElementById('메모');
 const logoutBtn = document.getElementById('logoutBtn');
 
-// 로그아웃 버튼 이벤트 리스너
-if (logoutBtn) {
+import { auth, onAuthStateChanged, handleLogout } from './firebase.js';
+
+document.addEventListener('DOMContentLoaded', () => {
+    const userNameElement = document.getElementById('userName');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userNameElement.textContent = user.email;
+        } else {
+            window.location.href = 'login.html';
+        }
+    });
+
     logoutBtn.addEventListener('click', handleLogout);
+});
+
+// 알림 함수
+function showAlert(message) {
+    const alertElement = document.getElementById('custom-alert');
+    const alertMessage = document.getElementById('alert-message');
+    alertMessage.textContent = message;
+    alertElement.classList.add('opacity-100');
+    setTimeout(() => {
+        alertElement.classList.remove('opacity-100');
+    }, 3000);
 }
 
 // Flatpickr 초기화

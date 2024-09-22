@@ -6,7 +6,7 @@ import {
     collection, 
     addDoc, 
     getDocs,
-    getDoc,  // 이 줄을 추가
+    getDoc, 
     deleteDoc, 
     doc, 
     updateDoc, 
@@ -14,9 +14,10 @@ import {
     where, 
     arrayUnion, 
     increment,
-    query  // 이 줄을 추가
+    query,
+    Timestamp // Timestamp 추가
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
-import { getAuth, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
+import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
 // Firebase 구성
 const firebaseConfig = {
@@ -57,11 +58,11 @@ onAuthStateChanged(auth, user => {
 // 함수 및 변수 내보내기
 export { 
     db, 
-    handleLogout, 
+    auth,
     collection, 
     addDoc, 
     getDocs,
-    getDoc,  // 이 줄을 추가
+    getDoc, 
     deleteDoc, 
     doc, 
     updateDoc, 
@@ -69,5 +70,11 @@ export {
     where, 
     arrayUnion, 
     increment,
-    query  // 이 줄을 추가
+    query, 
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    Timestamp,
+    handleLogout // handleLogout 함수 추가
 };

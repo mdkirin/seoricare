@@ -7,6 +7,8 @@
     <!-- Tailwind CSS 및 아이콘 라이브러리 추가 -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- favicon.ico 링크 추가 -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
     <!-- JavaScript 파일 추가 -->
     <script type="module" src="./drug.js"></script>
     <!-- SheetJS 라이브러리 추가 -->
@@ -50,23 +52,27 @@
             color: white;
         }
     </style>
+    <script type="module" src="./common.js" defer></script>
 </head>
 <body class="bg-gray-100 font-sans leading-normal tracking-normal h-screen">
-    <!-- 알림 요소 -->
-    <div id="custom-alert">
-        <span id="alert-message"></span>
-    </div>
-
-    <!-- 상단바 -->
-    <nav class="bg-indigo-500 p-2 shadow-md">
+    <nav class="bg-indigo-500 p-2 shadow-md w-full">
         <div class="flex justify-between items-center">
-            <h1 class="text-white text-2xl font-bold">서리단내과의원 검사등록시스템</h1>
+            <h1 class="text-white text-2xl font-bold">서리단내과의원</h1>
             <div class="flex items-center">
-                <div id="userStatus" class="text-white mr-4">로그인 상태 확인 중...</div>
+                <a href="index.html" class="text-white mr-4">홈</a>
+                <a href="scheduler.html" class="text-white mr-4">검사 예약</a>
+                <a href="endoscopy.html" class="text-white mr-4">내시경 관리</a>
+                <a href="drug.html" class="text-white mr-4">마약류 관리</a>
+                <a href="disinfection.html" class="text-white mr-4">내시경 세척 소독</a>
+                <span id="userName" class="text-white mr-4"></span>
                 <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
             </div>
         </div>
     </nav>
+    <!-- 알림 요소 -->
+    <div id="custom-alert">
+        <span id="alert-message"></span>
+    </div>
 
     <!-- 메인 콘텐츠 좌우 분할 -->
     <div class="container mx-auto mt-4 px-4 flex" style="max-width: 100%; height: calc(100vh - 6rem);">
