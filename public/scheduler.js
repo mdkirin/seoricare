@@ -78,7 +78,7 @@ function toggleButtonSelect(button, options) {
 async function fetchEvents() {
     const events = [];
     try {
-        const querySnapshot = await getDocs(collection(db, 'appointments'));
+        const querySnapshot = await getDocs(collection(db, '검사예약'));
         querySnapshot.forEach(docSnap => {
             const data = docSnap.data();
             if (data.start) {
@@ -221,7 +221,7 @@ async function handleEventDrop(info) {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await updateDoc(doc(db, 'appointments', eventId), {
+                await updateDoc(doc(db, '검사예약', eventId), {
                     start: newStart
                 });
 
@@ -604,7 +604,7 @@ registerBtn.addEventListener('click', async () => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await addDoc(collection(db, 'appointments'), {
+                await addDoc(collection(db, '검사예약'), {
                     start: utcDate,
                     환자이름,
                     차트번호,
@@ -709,7 +709,7 @@ updateBtn.addEventListener('click', async () => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await updateDoc(doc(db, 'appointments', selectedEventId), {
+                await updateDoc(doc(db, '검사예약', selectedEventId), {
                     start: utcDate,
                     환자이름,
                     차트번호,
@@ -745,7 +745,7 @@ deleteBtn.addEventListener('click', async () => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await deleteDoc(doc(db, 'appointments', selectedEventId));
+                await deleteDoc(doc(db, '검사예약', selectedEventId));
                 Swal.fire('삭제 완료', '예약이 성공적으로 삭제되었습니다.', 'success');
                 const events = await fetchEvents();
                 renderCalendar(events);
@@ -775,7 +775,7 @@ cancelBtn.addEventListener('click', async () => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await updateDoc(doc(db, 'appointments', selectedEventId), {
+                await updateDoc(doc(db, '검사예약', selectedEventId), {
                     status: 'canceled'
                 });
                 Swal.fire('취소 완료', '예약이 성공적으로 취소되었습니다.', 'success');
@@ -807,7 +807,7 @@ restoreBtn.addEventListener('click', async () => {
     }).then(async (result) => {
         if (result.isConfirmed) {
             try {
-                await updateDoc(doc(db, 'appointments', selectedEventId), {
+                await updateDoc(doc(db, '검사예약', selectedEventId), {
                     status: 'active'
                 });
                 Swal.fire('복구 완료', '예약이 성공적으로 복구되었습니다.', 'success');

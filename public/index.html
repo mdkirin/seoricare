@@ -12,6 +12,17 @@
     <script src="./login.js" type="module" defer></script>
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
+    <nav class="bg-indigo-500 p-2 shadow-md w-full">
+        <div class="flex justify-between items-center">
+            <h1 class="text-white text-2xl font-bold">서리단내과의원</h1>
+            <div class="flex items-center">
+                <a href="index.html" class="text-white mr-4">홈</a>
+                <a href="scheduler.html" class="text-white mr-4">검사 예약</a>
+                <a href="endoscopy.html" class="text-white mr-4">내시경 관리</a>
+                <button id="logoutBtn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">로그아웃</button>
+            </div>
+        </div>
+    </nav>
     <div class="w-full max-w-xs">
         <form class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4" id="loginForm">
             <h2 class="mb-4 text-center text-2xl font-bold">로그인</h2>
