@@ -73,7 +73,7 @@ async function loadExams() {
         examTableBody.appendChild(row);
     });
 
-    // 검사 선택 버튼의 이벤트 리스너 설정
+    // 검��� 선택 버튼의 이벤트 리스너 설정
     document.querySelectorAll('.btn-exam[data-value]').forEach(button => {
         button.addEventListener('click', function() {
             this.classList.toggle('selected');
@@ -113,7 +113,7 @@ function toMedicationInput() {
 
 // 3단계: 추가검사 입력으로 이동
 function toAdditionalTests() {
-    // 약물 데이터 ���장
+    // 약물 데이터 저장
     const midazolam = document.getElementById('midazolam').value;
     const propofol = document.getElementById('propofol').value;
     const pethidine = document.getElementById('pethidine').value;
@@ -154,61 +154,20 @@ function handleBiopsyCountInput() {
     biopsyLocationsDiv.innerHTML = ''; // 기존 내용 초기화
 
     for (let i = 1; i <= count; i++) {
-        const label = document.createElement('label');
-        label.textContent = `대장내시경 조직 위치 ${i} (cm from anal verge):`;
-        label.classList.add('block', 'text-gray-700');
-
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.id = `biopsy-location-${i}`;
-        input.classList.add('w-full', 'p-2', 'border', 'rounded', 'mb-2');
-
-        biopsyLocationsDiv.appendChild(label);
-        biopsyLocationsDiv.appendChild(input);
+        const locationValue = document.getElementById(`biopsy-location-${i}`).value;
+        if (locationValue) {
+            biopsyLocations.push(locationValue);
+        }
     }
 }
 
-// 4단계: 세척정보 입력으로 이동
+// 4단계: 세척 정보 입력으로 이동
 function toCleaningInfo() {
     scrollToStep(5);
 }
 
-// 데이터 제출 함수
+// 5단계: 데이터 제출
 async function submitAllData() {
-    // 진정약물 데이터 가져오기
-    const midazolam = parseFloat(document.getElementById('midazolam').value) || 0;
-    const propofol = parseFloat(document.getElementById('propofol').value) || 0;
-    const pethidine = parseFloat(document.getElementById('pethidine').value) || 0;
-
-    const sedationMeds = {};
-    if (midazolam) sedationMeds["미다졸람"] = midazolam;
-    if (propofol) sedationMeds["프로포폴"] = propofol;
-    if (pethidine) sedationMeds["페티딘"] = pethidine;
-
-    // 위내시경 추가검사 데이터
-    let gastroscopyBiopsyCount = 0;
-    let cloTest = false;
-    if (selectedExams.some(exam => exam.examType === '위내시경')) {
-        gastroscopyBiopsyCount = parseInt(document.getElementById('gastroscopy-biopsy-count').value) || 0;
-        cloTest = document.getElementById('clo-test').checked;
-    }
-
-    // 대장내시경 추가검사 데이터
-    let biopsyCount = 0;
-    let biopsyLocations = [];
-    let polypectomy = false;
-    if (selectedExams.some(exam => exam.examType === '대장내시경')) {
-        biopsyCount = parseInt(document.getElementById('biopsy-count').value) || 0;
-        polypectomy = document.getElementById('polypectomy').checked;
-
-        for (let i = 1; i <= biopsyCount; i++) {
-            const locationValue = document.getElementById(`biopsy-location-${i}`).value;
-            if (locationValue) {
-                biopsyLocations.push(locationValue);
-            }
-        }
-    }
-
     if (selectedExamIds.length === 0) {
         alert('검사를 선택해주세요.');
         return;
@@ -226,13 +185,24 @@ async function submitAllData() {
                 const updatedData = {};
 
                 // 진정약물 추가
-                updatedData[`검사.${examType}.진정약물`] = sedationMeds;
+                updatedData[`검사.${examType}.진정약물`] = medicationData;
 
                 // 추가검사 정보 업데이트
                 if (examType === '위내시경') {
+                    const cloTest = document.getElementById('clo-test').checked;
+                    const gastroscopyBiopsyCount = parseInt(document.getElementById('gastroscopy-biopsy-count').value) || 0;
                     updatedData[`검사.${examType}.CLO검사`] = cloTest;
                     updatedData[`검사.${examType}.위조직검사개수`] = gastroscopyBiopsyCount;
                 } else if (examType === '대장내시경') {
+                    const polypectomy = document.getElementById('polypectomy').checked;
+                    const biopsyCount = parseInt(document.getElementById('biopsy-count').value) || 0;
+                    const biopsyLocations = [];
+                    for (let i = 1; i <= biopsyCount; i++) {
+                        const locationValue = document.getElementById(`biopsy-location-${i}`).value;
+                        if (locationValue) {
+                            biopsyLocations.push(locationValue);
+                        }
+                    }
                     updatedData[`검사.${examType}.용종절제술`] = polypectomy;
                     updatedData[`검사.${examType}.대장조직검사개수`] = biopsyCount;
                     updatedData[`검사.${examType}.조직검사위치`] = biopsyLocations;
@@ -241,12 +211,45 @@ async function submitAllData() {
                 // 데이터베이스 업데이트
                 console.log(`업데이트할 데이터 (${docId}, ${examType}):`, updatedData);
                 await updateDoc(appointmentDocRef, updatedData);
+
+                // 마약류 재고량 차감
+                await updateDrugInventory(medicationData);
             }
         }
         alert('데이터가 성공적으로 저장되었습니다.');
     } catch (error) {
         console.error('데이터 저장 중 오류 발생:', error);
         alert('데이터 저장 중 오류가 발생했습니다.');
+    }
+}
+
+// 마약류 재고량 차감 함수
+async function updateDrugInventory(medicationData) {
+    const drugCollection = collection(db, '마약류_저장소');
+    const drugs = ['midazolam', 'propofol', 'pethidine'];
+
+    for (const drug of drugs) {
+        const usedAmount = parseFloat(medicationData[drug]) || 0;
+        if (usedAmount > 0) {
+            const q = query(drugCollection, where('제품명', '==', drug));
+            const querySnapshot = await getDocs(q);
+
+            querySnapshot.forEach(async (doc) => {
+                const drugData = doc.data();
+                const newStock = drugData.재고량 - usedAmount;
+
+                if (newStock <= 0) {
+                    await updateDoc(doc.ref, {
+                        재고량: 0,
+                        상태: '사용완료'
+                    });
+                } else {
+                    await updateDoc(doc.ref, {
+                        재고량: newStock
+                    });
+                }
+            });
+        }
     }
 }
 
@@ -382,3 +385,4 @@ function updateSelectedExams() {
 
 // 기존의 예약 로드 함수 등은 필요에 따라 추가하십시오.
 // 이 코드에서는 모달 동작에 필요한 부분에 집중하였습니다.
+
