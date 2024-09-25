@@ -113,7 +113,7 @@ function toMedicationInput() {
 
 // 3단계: 추가검사 입력으로 이동
 function toAdditionalTests() {
-    // 약물 데이터 저장
+    // 약물 데이터 ���장
     const midazolam = document.getElementById('midazolam').value;
     const propofol = document.getElementById('propofol').value;
     const pethidine = document.getElementById('pethidine').value;
@@ -140,28 +140,32 @@ function toAdditionalTests() {
 
             // 대장내시경 조직검사 개수 입력 이벤트 리스너 추가
             const biopsyCountInput = document.getElementById('biopsy-count');
-            biopsyCountInput.addEventListener('input', function() {
-                const count = parseInt(this.value) || 0;
-                biopsyLocationsDiv.innerHTML = ''; // 기존 내용 초기화
-
-                for (let i = 1; i <= count; i++) {
-                    const label = document.createElement('label');
-                    label.textContent = `대장내시경 조직 위치 ${i} (cm from anal verge):`;
-                    label.classList.add('block', 'text-gray-700');
-
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.id = `biopsy-location-${i}`;
-                    input.classList.add('w-full', 'p-2', 'border', 'rounded', 'mb-2');
-
-                    biopsyLocationsDiv.appendChild(label);
-                    biopsyLocationsDiv.appendChild(input);
-                }
-            });
+            biopsyCountInput.removeEventListener('input', handleBiopsyCountInput);
+            biopsyCountInput.addEventListener('input', handleBiopsyCountInput);
         }
     });
 
     scrollToStep(4);
+}
+
+function handleBiopsyCountInput() {
+    const count = parseInt(this.value) || 0;
+    const biopsyLocationsDiv = document.getElementById('biopsy-locations');
+    biopsyLocationsDiv.innerHTML = ''; // 기존 내용 초기화
+
+    for (let i = 1; i <= count; i++) {
+        const label = document.createElement('label');
+        label.textContent = `대장내시경 조직 위치 ${i} (cm from anal verge):`;
+        label.classList.add('block', 'text-gray-700');
+
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.id = `biopsy-location-${i}`;
+        input.classList.add('w-full', 'p-2', 'border', 'rounded', 'mb-2');
+
+        biopsyLocationsDiv.appendChild(label);
+        biopsyLocationsDiv.appendChild(input);
+    }
 }
 
 // 4단계: 세척정보 입력으로 이동
@@ -227,10 +231,10 @@ async function submitAllData() {
                 // 추가검사 정보 업데이트
                 if (examType === '위내시경') {
                     updatedData[`검사.${examType}.CLO검사`] = cloTest;
-                    updatedData[`검사.${examType}.조직검사개수`] = gastroscopyBiopsyCount;
+                    updatedData[`검사.${examType}.위조직검사개수`] = gastroscopyBiopsyCount;
                 } else if (examType === '대장내시경') {
                     updatedData[`검사.${examType}.용종절제술`] = polypectomy;
-                    updatedData[`검사.${examType}.조직검사개수`] = biopsyCount;
+                    updatedData[`검사.${examType}.대장조직검사개수`] = biopsyCount;
                     updatedData[`검사.${examType}.조직검사위치`] = biopsyLocations;
                 }
 
@@ -265,11 +269,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('prev-button-cleaning-info').addEventListener('click', () => scrollToStep(4));
     document.getElementById('submit-button').addEventListener('click', submitAllData);
 
+    // 프로포폴 용량의 step을 1로 설정
+    const propofolInput = document.getElementById('propofol');
+    if (propofolInput) {
+        propofolInput.step = 1;
+    }
+
+    // 조직검사 개수 입력 필드의 step을 1로 설정
+    const gastroscopyBiopsyCountInput = document.getElementById('gastroscopy-biopsy-count');
+    if (gastroscopyBiopsyCountInput) {
+        gastroscopyBiopsyCountInput.step = 1;
+        gastroscopyBiopsyCountInput.min = 0; // 음수 값 방지
+    }
+
+    const biopsyCountInput = document.getElementById('biopsy-count');
+    if (biopsyCountInput) {
+        biopsyCountInput.step = 1;
+        biopsyCountInput.min = 0; // 음수 값 방지
+    }
+
     document.querySelectorAll('.increment').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.previousElementSibling;
             if (input && input.type === 'number') {
-                input.value = (parseFloat(input.value) + 0.5).toFixed(1);
+                const step = input.id === 'propofol' || input.id === 'biopsy-count' || input.id === 'gastroscopy-biopsy-count' ? 1 : 0.5;
+                input.value = (parseFloat(input.value) + step).toFixed(input.id === 'biopsy-count' || input.id === 'gastroscopy-biopsy-count' ? 0 : 1);
             }
         });
     });
@@ -277,8 +301,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.querySelectorAll('.decrement').forEach(button => {
         button.addEventListener('click', function() {
             const input = this.nextElementSibling;
-            if (input && input.type === 'number' && parseFloat(input.value) > 0) {
-                input.value = (parseFloat(input.value) - 0.5).toFixed(1);
+            if (input && input.type === 'number') {
+                const step = input.id === 'propofol' || input.id === 'biopsy-count' || input.id === 'gastroscopy-biopsy-count' ? 1 : 0.5;
+                input.value = Math.max(0, (parseFloat(input.value) - step)).toFixed(input.id === 'biopsy-count' || input.id === 'gastroscopy-biopsy-count' ? 0 : 1); // 음수 값 방지
             }
         });
     });
@@ -345,11 +370,14 @@ document.querySelectorAll('.btn-exam[data-value]').forEach(button => {
 // 선택된 검사를 업데이트하는 함수
 function updateSelectedExams() {
     selectedExams = [];
+    selectedExamIds = []; // 선택된 예약 문서 ID 목록 초기화
     document.querySelectorAll('.btn-exam.selected').forEach(button => {
-        const examType = button.getAttribute('data-value');
-        selectedExams.push(JSON.parse(examType));
+        const examData = JSON.parse(button.getAttribute('data-value'));
+        selectedExams.push(examData);
+        selectedExamIds.push(examData.docId); // 선택된 예약 문서 ID 추가
     });
     console.log('선택된 검사:', selectedExams); // 콘솔 로그 추가
+    console.log('선택된 예약 문서 ID 목록:', selectedExamIds); // 콘솔 로그 추가
 }
 
 // 기존의 예약 로드 함수 등은 필요에 따라 추가하십시오.
