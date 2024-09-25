@@ -28,6 +28,7 @@
             opacity: 0;
             z-index: 1000;
             transition: opacity 0.5s ease-in-out;
+            display: none; /* 초기에는 숨김 */
         }
 
         #custom-alert.show {
@@ -86,12 +87,12 @@
                     <!-- 테이블 내용 -->
                     <thead>
                         <tr>
-                            <th class="py-2 cursor-pointer text-center" onclick="정렬('제품명')">제품명</th>
-                            <th class="py-2 cursor-pointer text-center" onclick="정렬('성분명')">성분명</th>
-                            <th class="py-2 cursor-pointer text-center" onclick="정렬('일련번호')">일련번호</th>
-                            <th class="py-2 cursor-pointer text-center" onclick="정렬('앰플용량')">앰플 용량 (mL)</th>
-                            <th class="py-2 cursor-pointer text-center" onclick="정렬('앰플수량')">앰플 수량</th>
-                            <th class="py-2 cursor-pointer text-center" onclick="정렬('재고량')">재고량</th>
+                            <th class="py-2 cursor-pointer text-center">제품명</th>
+                            <th class="py-2 cursor-pointer text-center">성분명</th>
+                            <th class="py-2 cursor-pointer text-center">일련번호</th>
+                            <th class="py-2 cursor-pointer text-center">앰플 수량</th>
+                            <th class="py-2 cursor-pointer text-center">재고량</th>
+                            <th class="py-2 cursor-pointer text-center">상태</th>
                         </tr>                
                     </thead>
                     <tbody id="마약류테이블">
@@ -142,10 +143,10 @@
             </div>
             <!-- 버튼 그룹 -->
             <div class="mt-4 flex space-x-2">
-                <button id="추가버튼" onclick="마약류추가()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded">추가</button>
-                <button id="수정버튼" onclick="마약류수정()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded hidden">수정</button>
-                <button id="삭제버튼" onclick="마약류삭제()" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded hidden">삭제</button>
-                <button id="사용중버튼" onclick="사용중인일련번호추가()" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded hidden">사용중인 일련번호</button>
+                <button id="추가버튼" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded">추가</button>
+                <button id="수정버튼" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded hidden">수정</button>
+                <button id="삭제버튼" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded hidden">삭제</button>
+                <button id="사용중버튼" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded hidden">사용중인 일련번호</button>
             </div>
 
             <!-- 엑셀 파일 업로드 -->
@@ -155,12 +156,12 @@
             <!-- 커스텀 파일 선택 버튼 -->
             <button id="파일선택버튼" class="bg-indigo-500 hover:bg-indigo-700 text-white px-4 py-2 rounded">파일 선택</button>
             <!-- 선택된 파일명 표시 -->
-            <span id="선택된파일명" class="ml-2 text-gray-600"></span>            
-            <button onclick="엑셀업로드()" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">업로드</button>
+            <span id="선택된파일명" class="ml-2 text-gray-600"></span>
+            <button id="엑셀업로드버튼" class="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded">업로드</button>
 
             <!-- DB 삭제 버튼 -->
             <h2 class="text-lg font-bold mt-8 mb-4">데이터베이스 관리</h2>
-            <button onclick="DB삭제()" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded hidden">DB 삭제</button>
+            <button id="DB삭제버튼" class="bg-red-500 hover:bg-red-700 text-white px-4 py-2 rounded hidden">DB 삭제</button>
         </div>
     </div>
 </body>

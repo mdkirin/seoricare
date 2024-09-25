@@ -15,7 +15,8 @@ import {
     arrayUnion, 
     increment,
     query,
-    Timestamp // Timestamp 추가
+    Timestamp, // Timestamp 추가
+    runTransaction 
 } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js';
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.13.1/firebase-auth.js';
 
@@ -76,5 +77,6 @@ export {
     createUserWithEmailAndPassword,
     signOut,
     Timestamp,
-    handleLogout // handleLogout 함수 추가
+    handleLogout, // handleLogout 함수 추가
+    runTransaction
 };
