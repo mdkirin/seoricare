@@ -2,7 +2,7 @@ import {
     db, 
     auth, 
     collection, 
-    addDoc,
+    addDoc, 
     getDocs, 
     query, 
     where, 
@@ -10,7 +10,8 @@ import {
     onAuthStateChanged, 
     signOut, 
     doc, 
-    getDoc 
+    getDoc, 
+    updateDoc
 } from './firebase.js';
 
 // 모달 관련 변수들
@@ -19,26 +20,67 @@ let selectedExams = []; // 선택된 검사 목록
 let medicationData = {};
 let additionalTests = [];
 let cleaningInfo = {};
+let selectedExamIds = []; // 선택된 예약 문서 ID 목록
 
-// 모달 제어 함수들
-function openModal(modalId) {
-    closeAllModals();
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('active');
-    }
+// 스크롤 이동 함수
+function scrollToStep(step) {
+    const section = document.getElementById(`step-${step}`);
+    section.scrollIntoView({ behavior: 'smooth' });
+    updateActiveDot(step);
 }
 
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('active');
-    }
+// 도트 네비게이션 업데이트 함수
+function updateActiveDot(step) {
+    document.querySelectorAll('.dot').forEach(dot => {
+        dot.classList.remove('active');
+    });
+    document.querySelector(`.dot[data-step="${step}"]`).classList.add('active');
 }
 
-function closeAllModals() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => modal.classList.remove('active'));
+// 검사 목록 불러오기 함수
+async function loadExams() {
+    const examTableBody = document.querySelector('#exam-table tbody');
+    examTableBody.innerHTML = ''; // 기존 내용 초기화
+
+    const selectedDateStart = new Date(selectedDate);
+    const selectedDateEnd = new Date(selectedDate);
+    selectedDateEnd.setDate(selectedDateEnd.getDate() + 1);
+
+    const q = query(
+        collection(db, '검사예약'),
+        where('start', '>=', Timestamp.fromDate(selectedDateStart)),
+        where('start', '<', Timestamp.fromDate(selectedDateEnd))
+    );
+
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log('불러온 문서 데이터:', data); // 콘솔 로그 추가
+        const examType = Object.keys(data.검사)[0]; // 첫 번째 검사 종류 가져오기
+        const examData = data.검사[examType];
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="px-4 py-2">${data.start.toDate().toLocaleTimeString()}</td>
+            <td class="px-4 py-2">${data.환자이름 || 'N/A'}</td>
+            <td class="px-4 py-2">${examType}</td>
+            <td class="px-4 py-2">${examData.검진 ? '예' : '아니오'}</td>
+            <td class="px-4 py-2">${examData.진정 ? '예' : '아니오'}</td>
+        `;
+        row.classList.add('btn-exam');
+        row.setAttribute('data-value', JSON.stringify({ docId: doc.id, examType }));
+        examTableBody.appendChild(row);
+    });
+
+    // 검사 선택 버튼의 이벤트 리스너 설정
+    document.querySelectorAll('.btn-exam[data-value]').forEach(button => {
+        button.addEventListener('click', function() {
+            this.classList.toggle('selected');
+            this.classList.toggle('bg-blue-200'); // 선택된 항목에 배경색 추가
+            updateSelectedExams();
+        });
+    });
 }
 
 // 단계별 함수들
@@ -48,8 +90,9 @@ function toExamSelection() {
     const dateInput = document.getElementById('selected-date');
     if (dateInput && dateInput.value) {
         selectedDate = dateInput.value;
-        closeModal('modal-date');
-        openModal('modal-exam');
+        console.log('선택된 날짜:', selectedDate); // 콘솔 로그 추가
+        document.getElementById('selected-date-display').textContent = `선택된 날짜: ${selectedDate}`;
+        scrollToStep(2);
 
         // 검사 목록 불러오기
         loadExams();
@@ -60,9 +103,9 @@ function toExamSelection() {
 
 // 2단계: 약물 입력으로 이동
 function toMedicationInput() {
+    console.log('선택된 검사 목록:', selectedExams); // 콘솔 로그 추가
     if (selectedExams.length > 0) {
-        closeModal('modal-exam');
-        openModal('modal-medication');
+        scrollToStep(3);
     } else {
         alert('최소 하나의 검사를 선택해주세요.');
     }
@@ -70,106 +113,184 @@ function toMedicationInput() {
 
 // 3단계: 추가검사 입력으로 이동
 function toAdditionalTests() {
+    // 약물 데이터 저장
     const midazolam = document.getElementById('midazolam').value;
     const propofol = document.getElementById('propofol').value;
     const pethidine = document.getElementById('pethidine').value;
 
     medicationData = { midazolam, propofol, pethidine };
-    closeModal('modal-medication');
-    openModal('modal-additional-tests');
+
+    // 선택된 검사에 따라 추가검사 모달 내용 업데이트
+    const gastroscopyInputs = document.getElementById('gastroscopy-inputs');
+    const colonoscopyInputs = document.getElementById('colonoscopy-inputs');
+    const biopsyLocationsDiv = document.getElementById('biopsy-locations');
+
+    // 초기화
+    gastroscopyInputs.style.display = 'none';
+    colonoscopyInputs.style.display = 'none';
+    biopsyLocationsDiv.innerHTML = '';
+
+    // 선택된 검사에 따라 입력 필드 표시
+    selectedExams.forEach(exam => {
+        if (exam.examType === '위내시경') {
+            gastroscopyInputs.style.display = 'block';
+        }
+        if (exam.examType === '대장내시경') {
+            colonoscopyInputs.style.display = 'block';
+
+            // 대장내시경 조직검사 개수 입력 이벤트 리스너 추가
+            const biopsyCountInput = document.getElementById('biopsy-count');
+            biopsyCountInput.addEventListener('input', function() {
+                const count = parseInt(this.value) || 0;
+                biopsyLocationsDiv.innerHTML = ''; // 기존 내용 초기화
+
+                for (let i = 1; i <= count; i++) {
+                    const label = document.createElement('label');
+                    label.textContent = `대장내시경 조직 위치 ${i} (cm from anal verge):`;
+                    label.classList.add('block', 'text-gray-700');
+
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.id = `biopsy-location-${i}`;
+                    input.classList.add('w-full', 'p-2', 'border', 'rounded', 'mb-2');
+
+                    biopsyLocationsDiv.appendChild(label);
+                    biopsyLocationsDiv.appendChild(input);
+                }
+            });
+        }
+    });
+
+    scrollToStep(4);
 }
 
 // 4단계: 세척정보 입력으로 이동
 function toCleaningInfo() {
-    const biopsy = document.getElementById('biopsy').checked;
-    const additionalTest1 = document.getElementById('additional-test-1').checked;
-    const additionalTest2 = document.getElementById('additional-test-2').checked;
-
-    additionalTests = [];
-    if (biopsy) additionalTests.push('조직검사');
-    if (additionalTest1) additionalTests.push('추가검사 1');
-    if (additionalTest2) additionalTests.push('추가검사 2');
-
-    closeModal('modal-additional-tests');
-    openModal('modal-cleaning-info');
+    scrollToStep(5);
 }
 
-// 최종 데이터 제출 함수
+// 데이터 제출 함수
 async function submitAllData() {
-    const cleaningMethod = document.getElementById('cleaning-method').value;
-    const disinfectant = document.getElementById('disinfectant').value;
+    // 진정약물 데이터 가져오기
+    const midazolam = parseFloat(document.getElementById('midazolam').value) || 0;
+    const propofol = parseFloat(document.getElementById('propofol').value) || 0;
+    const pethidine = parseFloat(document.getElementById('pethidine').value) || 0;
 
-    cleaningInfo = { cleaningMethod, disinfectant };
+    const sedationMeds = {};
+    if (midazolam) sedationMeds["미다졸람"] = midazolam;
+    if (propofol) sedationMeds["프로포폴"] = propofol;
+    if (pethidine) sedationMeds["페티딘"] = pethidine;
 
-    // 모든 데이터를 취합하여 데이터베이스에 저장
-    const finalData = {
-        date: selectedDate,
-        exams: selectedExams,
-        medication: medicationData,
-        additionalTests: additionalTests,
-        cleaningInfo: cleaningInfo,
-        timestamp: new Date()
-    };
+    // 위내시경 추가검사 데이터
+    let gastroscopyBiopsyCount = 0;
+    let cloTest = false;
+    if (selectedExams.some(exam => exam.examType === '위내시경')) {
+        gastroscopyBiopsyCount = parseInt(document.getElementById('gastroscopy-biopsy-count').value) || 0;
+        cloTest = document.getElementById('clo-test').checked;
+    }
+
+    // 대장내시경 추가검사 데이터
+    let biopsyCount = 0;
+    let biopsyLocations = [];
+    let polypectomy = false;
+    if (selectedExams.some(exam => exam.examType === '대장내시경')) {
+        biopsyCount = parseInt(document.getElementById('biopsy-count').value) || 0;
+        polypectomy = document.getElementById('polypectomy').checked;
+
+        for (let i = 1; i <= biopsyCount; i++) {
+            const locationValue = document.getElementById(`biopsy-location-${i}`).value;
+            if (locationValue) {
+                biopsyLocations.push(locationValue);
+            }
+        }
+    }
+
+    if (selectedExamIds.length === 0) {
+        alert('검사를 선택해주세요.');
+        return;
+    }
 
     try {
-        await addDoc(collection(db, '내시경_데이터'), finalData);
+        for (const exam of selectedExams) {
+            const { docId, examType } = exam;
+            const appointmentDocRef = doc(db, '검사예약', docId);
+            const appointmentDocSnap = await getDoc(appointmentDocRef);
+
+            if (appointmentDocSnap.exists()) {
+                const appointmentData = appointmentDocSnap.data();
+
+                const updatedData = {};
+
+                // 진정약물 추가
+                updatedData[`검사.${examType}.진정약물`] = sedationMeds;
+
+                // 추가검사 정보 업데이트
+                if (examType === '위내시경') {
+                    updatedData[`검사.${examType}.CLO검사`] = cloTest;
+                    updatedData[`검사.${examType}.조직검사개수`] = gastroscopyBiopsyCount;
+                } else if (examType === '대장내시경') {
+                    updatedData[`검사.${examType}.용종절제술`] = polypectomy;
+                    updatedData[`검사.${examType}.조직검사개수`] = biopsyCount;
+                    updatedData[`검사.${examType}.조직검사위치`] = biopsyLocations;
+                }
+
+                // 데이터베이스 업데이트
+                console.log(`업데이트할 데이터 (${docId}, ${examType}):`, updatedData);
+                await updateDoc(appointmentDocRef, updatedData);
+            }
+        }
         alert('데이터가 성공적으로 저장되었습니다.');
-        closeAllModals();
     } catch (error) {
         console.error('데이터 저장 중 오류 발생:', error);
         alert('데이터 저장 중 오류가 발생했습니다.');
     }
 }
 
-// 검사 데이터를 불러와 테이블에 표시하는 함수
-async function loadExams() {
-    try {
-        // Firestore에서 검사 목록 불러오기
-        const examCollection = collection(db, '검사목록'); // '검사목록' 컬렉션 이름은 실제 사용하는 이름으로 변경하세요
-        const examSnapshot = await getDocs(examCollection);
-        const examTableBody = document.querySelector('#exam-table tbody');
-        examTableBody.innerHTML = ''; // 기존 내용 초기화
-
-        examSnapshot.forEach((doc) => {
-            const examData = doc.data();
-            const row = document.createElement('tr');
-            row.classList.add('cursor-pointer');
-
-            // 행 클릭 시 선택 또는 선택 해제
-            row.addEventListener('click', () => {
-                row.classList.toggle('bg-blue-100');
-                const examName = examData.name;
-                if (selectedExams.includes(examName)) {
-                    // 이미 선택된 경우 제거
-                    selectedExams = selectedExams.filter(name => name !== examName);
-                } else {
-                    // 선택되지 않은 경우 추가
-                    selectedExams.push(examName);
-                }
-            });
-
-            // 검사명 셀
-            const nameCell = document.createElement('td');
-            nameCell.classList.add('px-4', 'py-2');
-            nameCell.textContent = examData.name;
-
-            // 설명 셀
-            const descCell = document.createElement('td');
-            descCell.classList.add('px-4', 'py-2');
-            descCell.textContent = examData.description || '';
-
-            row.appendChild(nameCell);
-            row.appendChild(descCell);
-
-            examTableBody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('검사 목록을 불러오는 중 오류 발생:', error);
-    }
-}
-
-// 페이지 로드 시 첫 번째 모달 열기
 document.addEventListener('DOMContentLoaded', async () => {
+    // 오늘 날짜로 미리 세팅
+    const dateInput = document.getElementById('selected-date');
+    if (dateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+
+    // 이벤트 리스너 등록
+    document.getElementById('next-button-date').addEventListener('click', toExamSelection);
+    document.getElementById('prev-button-exam').addEventListener('click', () => scrollToStep(1));
+    document.getElementById('next-button-exam').addEventListener('click', toMedicationInput);
+    document.getElementById('prev-button-medication').addEventListener('click', () => scrollToStep(2));
+    document.getElementById('next-button-medication').addEventListener('click', toAdditionalTests);
+    document.getElementById('prev-button-additional-tests').addEventListener('click', () => scrollToStep(3));
+    document.getElementById('next-button-additional-tests').addEventListener('click', toCleaningInfo);
+    document.getElementById('prev-button-cleaning-info').addEventListener('click', () => scrollToStep(4));
+    document.getElementById('submit-button').addEventListener('click', submitAllData);
+
+    document.querySelectorAll('.increment').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.previousElementSibling;
+            if (input && input.type === 'number') {
+                input.value = (parseFloat(input.value) + 0.5).toFixed(1);
+            }
+        });
+    });
+
+    document.querySelectorAll('.decrement').forEach(button => {
+        button.addEventListener('click', function() {
+            const input = this.nextElementSibling;
+            if (input && input.type === 'number' && parseFloat(input.value) > 0) {
+                input.value = (parseFloat(input.value) - 0.5).toFixed(1);
+            }
+        });
+    });
+
+    // 도트 네비게이션 이벤트 리스너 등록
+    document.querySelectorAll('.dot').forEach(dot => {
+        dot.addEventListener('click', function() {
+            const step = this.getAttribute('data-step');
+            scrollToStep(step);
+        });
+    });
+
     // 사용자 이름 요소
     const userNameElement = document.getElementById('userName');
 
@@ -208,22 +329,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-    // 페이지 로드 시 날짜 선택 모달 열기
-    openModal('modal-date');
-
-    // 이벤트 리스너 등록
-    document.getElementById('next-button-date').addEventListener('click', toExamSelection);
-    document.getElementById('next-button-exam').addEventListener('click', toMedicationInput);
-    document.getElementById('next-button-medication').addEventListener('click', toAdditionalTests);
-    document.getElementById('next-button-additional-tests').addEventListener('click', toCleaningInfo);
-    document.getElementById('submit-button').addEventListener('click', submitAllData);
-
-    // 이전 버튼들도 필요에 따라 추가
-    document.getElementById('prev-button-exam').addEventListener('click', () => openModal('modal-date'));
-    document.getElementById('prev-button-medication').addEventListener('click', () => openModal('modal-exam'));
-    document.getElementById('prev-button-additional-tests').addEventListener('click', () => openModal('modal-medication'));
-    document.getElementById('prev-button-cleaning-info').addEventListener('click', () => openModal('modal-additional-tests'));
+    // 페이지 로드 시 첫 번째 단계로 스크롤 이동
+    scrollToStep(1);
 });
+
+// 검사 선택 버튼의 이벤트 리스너 설정
+document.querySelectorAll('.btn-exam[data-value]').forEach(button => {
+    button.addEventListener('click', function() {
+        this.classList.toggle('selected');
+        this.classList.toggle('bg-blue-200'); // 선택된 항목에 배경색 추가
+        updateSelectedExams();
+    });
+});
+
+// 선택된 검사를 업데이트하는 함수
+function updateSelectedExams() {
+    selectedExams = [];
+    document.querySelectorAll('.btn-exam.selected').forEach(button => {
+        const examType = button.getAttribute('data-value');
+        selectedExams.push(JSON.parse(examType));
+    });
+    console.log('선택된 검사:', selectedExams); // 콘솔 로그 추가
+}
 
 // 기존의 예약 로드 함수 등은 필요에 따라 추가하십시오.
 // 이 코드에서는 모달 동작에 필요한 부분에 집중하였습니다.

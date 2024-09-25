@@ -9,37 +9,67 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <!-- 스크립트 파일 추가 -->
     <script type="module" src="./endoscopy.js"></script>
-
-    <!-- 모달 스타일 CSS 추가 -->
+    <!-- 머티리얼 아이콘 추가 -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-    .modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: none; /* 숨김 처리 */
-        background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal.active {
-        display: block; /* 모달이 열릴 때 표시 */
-    }
-
-    /* 모달 콘텐츠 스타일 */
-    .modal-content {
-        background-color: #fff;
-        margin: 10% auto;
-        padding: 20px;
-        width: 90%;
-        max-width: 500px;
-        border-radius: 8px;
-    }
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden; /* 스크롤을 비활성화 */
+        }
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+        }
+        .content {
+            margin-top: 60px; /* 상단바 높이만큼 마진 추가 */
+            height: calc(100vh - 60px); /* 상단바를 제외한 높이 */
+            overflow: hidden; /* 스크롤을 비활성화 */
+        }
+        .section {
+            height: 100vh; /* 각 섹션이 페이지의 전체 높이를 차지하도록 설정 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .dot-nav {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* 중앙 정렬 */
+            gap: 10px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            background-color: gray;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: width 0.3s, height 0.3s;
+        }
+        .dot.active {
+            width: 16px;
+            height: 16px;
+            background-color: blue;
+        }
+        .date-input {
+            width: 200px; /* 날짜 입력창 너비 조정 */
+        }
+        /* 테이블 헤더와 바디의 텍스트 중앙 정렬 */
+        #exam-table th, #exam-table td {
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
     <!-- 상단바 -->
-    <nav class="bg-indigo-500 p-2 shadow-md w-full">
+    <nav class="navbar bg-indigo-500 p-2 shadow-md">
         <div class="flex justify-between items-center">
             <h1 class="text-white text-2xl font-bold">서리단내과의원</h1>
             <div class="flex items-center">
@@ -50,60 +80,42 @@
         </div>
     </nav>
 
+    <!-- 도트 네비게이션 -->
+    <div class="dot-nav">
+        <div class="dot" data-step="1"></div>
+        <div class="dot" data-step="2"></div>
+        <div class="dot" data-step="3"></div>
+        <div class="dot" data-step="4"></div>
+        <div class="dot" data-step="5"></div>
+    </div>
+
     <!-- 콘텐츠 영역 -->
-    <div class="container mx-auto mt-6 px-4">
-        <!-- 날짜 선택 -->
-        <div class="mb-6">
-            <label for="dateInput" class="block text-gray-700 text-sm font-bold mb-2">날짜 선택:</label>
-            <input type="date" id="dateInput" class="w-full p-2 border rounded">
+    <div class="content container mx-auto mt-6 px-4">
+        <!-- 1단계: 검사일자 선택 -->
+        <div id="step-1" class="section">
+            <h3 class="text-xl font-semibold mb-4">1단계: 검사일자 선택</h3>
+            <label for="selected-date" class="block text-gray-700">검사일자:</label>
+            <input type="date" id="selected-date" class="date-input w-full p-2 border rounded mb-2">
+            <button id="next-button-date" class="px-4 py-2 bg-blue-500 text-white rounded mt-4">다음</button>
         </div>
 
-        <!-- 예약 목록 -->
-        <div class="mb-6">
-            <h2 class="text-2xl font-semibold mb-4">예약 목록</h2>
-            <table id="appointment-table" class="min-w-full bg-white border border-gray-300">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-4 py-2">시간</th>
-                        <th class="px-4 py-2">이름</th>
-                        <th class="px-4 py-2">내시경 종류</th>
-                        <th class="px-4 py-2">검진 여부</th>
-                        <th class="px-4 py-2">진정 여부</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- 예약 데이터가 동적으로 추가됩니다 -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- 모달들 -->
-
-    <!-- 날짜 선택 모달 -->
-    <div id="modal-date" class="modal">
-        <div class="modal-content">
-            <h3 class="text-xl font-semibold mb-4">1단계: 날짜 선택</h3>
-            <input type="date" id="selected-date" class="border p-2 rounded mb-4 w-full">
-            <div class="flex justify-end">
-                <button id="next-button-date" class="px-4 py-2 bg-blue-500 text-white rounded">다음</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 검사 선택 모달 -->
-    <div id="modal-exam" class="modal">
-        <div class="modal-content">
+        <!-- 2단계: 검사 선택 -->
+        <div id="step-2" class="section">
             <h3 class="text-xl font-semibold mb-4">2단계: 검사 선택</h3>
+            <p id="selected-date-display"></p> <!-- 선택된 날짜 표시 -->
+
             <table id="exam-table" class="min-w-full bg-white border border-gray-300">
                 <thead>
                     <tr class="bg-gray-100">
-                        <th class="px-4 py-2">검사명</th>
-                        <th class="px-4 py-2">설명</th>
+                        <th class="px-4 py-2">시각</th>
+                        <th class="px-4 py-2">이름</th>
+                        <th class="px-4 py-2">검사</th>
+                        <th class="px-4 py-2">검진</th>
+                        <th class="px-4 py-2">진정</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- 검사가 동적으로 추가됩니다 -->
+                    <!-- 데이터가 동적으로 추가됩니다 -->
                 </tbody>
             </table>
             <div class="flex justify-between mt-4">
@@ -111,42 +123,86 @@
                 <button id="next-button-exam" class="px-4 py-2 bg-blue-500 text-white rounded">다음</button>
             </div>
         </div>
-    </div>
 
-    <!-- 약물 입력 모달 -->
-    <div id="modal-medication" class="modal">
-        <div class="modal-content">
+        <!-- 3단계: 약물 입력 -->
+        <div id="step-3" class="section">
             <h3 class="text-xl font-semibold mb-4">3단계: 약물 입력</h3>
-            <label for="midazolam" class="block text-gray-700">미다졸람 (ml):</label>
-            <input type="number" id="midazolam" step="0.5" class="w-full p-2 border rounded mb-2">
-            <label for="propofol" class="block text-gray-700">프로포폴 (ml):</label>
-            <input type="number" id="propofol" step="0.5" class="w-full p-2 border rounded mb-2">
-            <label for="pethidine" class="block text-gray-700">페티딘 (ml):</label>
-            <input type="number" id="pethidine" step="0.5" class="w-full p-2 border rounded mb-2">
+            <label for="midazolam" class="block text-gray-700">미다졸람 (mg):</label>
+            <div class="flex items-center justify-center">
+                <button type="button" class="decrement px-2 py-1 bg-gray-300 rounded-full">
+                    <span class="material-icons">remove</span>
+                </button>
+                <input type="number" id="midazolam" class="w-16 text-center text-2xl font-bold mx-2" value="0" min="0" step="0.5">
+                <button type="button" class="increment px-2 py-1 bg-gray-300 rounded-full">
+                    <span class="material-icons">add</span>
+                </button>
+            </div>
+            <label for="propofol" class="block text-gray-700 mt-4">프로포폴 (mg):</label>
+            <div class="flex items-center justify-center">
+                <button type="button" class="decrement px-2 py-1 bg-gray-300 rounded-full">
+                    <span class="material-icons">remove</span>
+                </button>
+                <input type="number" id="propofol" class="w-16 text-center text-2xl font-bold mx-2" value="0" min="0" step="0.5">
+                <button type="button" class="increment px-2 py-1 bg-gray-300 rounded-full">
+                    <span class="material-icons">add</span>
+                </button>
+            </div>
+            <label for="pethidine" class="block text-gray-700 mt-4">페티딘 (mg):</label>
+            <div class="flex items-center justify-center">
+                <button type="button" class="decrement px-2 py-1 bg-gray-300 rounded-full">
+                    <span class="material-icons">remove</span>
+                </button>
+                <input type="number" id="pethidine" class="w-16 text-center text-2xl font-bold mx-2" value="0" min="0" step="0.5">
+                <button type="button" class="increment px-2 py-1 bg-gray-300 rounded-full">
+                    <span class="material-icons">add</span>
+                </button>
+            </div>
             <div class="flex justify-between mt-4">
                 <button id="prev-button-medication" class="px-4 py-2 bg-gray-500 text-white rounded">이전</button>
                 <button id="next-button-medication" class="px-4 py-2 bg-blue-500 text-white rounded">다음</button>
             </div>
         </div>
-    </div>
 
-    <!-- 조직검사 및 추가검사 입력 모달 -->
-    <div id="modal-additional-tests" class="modal">
-        <div class="modal-content">
-            <h3 class="text-xl font-semibold mb-4">4단계: 조직검사 및 추가검사 입력</h3>
-            <label class="block mb-2"><input type="checkbox" id="biopsy" /> 조직검사</label>
-            <label class="block mb-2"><input type="checkbox" id="additional-test-1" /> 추가검사 1</label>
-            <label class="block mb-2"><input type="checkbox" id="additional-test-2" /> 추가검사 2</label>
+        <!-- 4단계: 추가검사 입력 -->
+        <div id="step-4" class="section">
+            <h3 class="text-xl font-semibold mb-4">4단계: 추가검사 입력</h3>
+            <div id="gastroscopy-inputs" style="display: none;">
+                <label for="gastroscopy-biopsy-count" class="block text-gray-700">위내시경 조직검사 개수:</label>
+                <div class="flex items-center justify-center">
+                    <button type="button" class="decrement px-2 py-1 bg-gray-300 rounded-full">
+                        <span class="material-icons">remove</span>
+                    </button>
+                    <input type="number" id="gastroscopy-biopsy-count" class="w-16 text-center text-2xl font-bold mx-2" value="0" min="0" step="0.5">
+                    <button type="button" class="increment px-2 py-1 bg-gray-300 rounded-full">
+                        <span class="material-icons">add</span>
+                    </button>
+                </div>
+                <label for="clo-test" class="block text-gray-700 mt-4">CLO 검사:</label>
+                <input type="checkbox" id="clo-test" class="w-full p-2 border rounded mb-2">
+            </div>
+            <div id="colonoscopy-inputs" style="display: none;">
+                <label for="biopsy-count" class="block text-gray-700">대장내시경 조직검사 개수:</label>
+                <div class="flex items-center justify-center">
+                    <button type="button" class="decrement px-2 py-1 bg-gray-300 rounded-full">
+                        <span class="material-icons">remove</span>
+                    </button>
+                    <input type="number" id="biopsy-count" class="w-16 text-center text-2xl font-bold mx-2" value="0" min="0" step="0.5">
+                    <button type="button" class="increment px-2 py-1 bg-gray-300 rounded-full">
+                        <span class="material-icons">add</span>
+                    </button>
+                </div>
+                <div id="biopsy-locations" class="mt-4"></div>
+                <label for="polypectomy" class="block text-gray-700 mt-4">용종절제술:</label>
+                <input type="checkbox" id="polypectomy" class="w-full p-2 border rounded mb-2">
+            </div>
             <div class="flex justify-between mt-4">
                 <button id="prev-button-additional-tests" class="px-4 py-2 bg-gray-500 text-white rounded">이전</button>
                 <button id="next-button-additional-tests" class="px-4 py-2 bg-blue-500 text-white rounded">다음</button>
             </div>
         </div>
-    </div>
 
-    <!-- 세척정보 입력 모달 -->
-    <div id="modal-cleaning-info" class="modal">
-        <div class="modal-content">
+        <!-- 5단계: 세척정보 입력 -->
+        <div id="step-5" class="section">
             <h3 class="text-xl font-semibold mb-4">5단계: 세척정보 입력</h3>
             <label for="cleaning-method" class="block text-gray-700">세척 방법:</label>
             <input type="text" id="cleaning-method" class="w-full p-2 border rounded mb-2">
@@ -158,6 +214,5 @@
             </div>
         </div>
     </div>
-
 </body>
 </html>
